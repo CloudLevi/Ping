@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Ping</string>
+    <string name="google_client_id">407708783580-04omnltaol5r08njns2pv6vir5bqjs44.apps.googleusercontent.com</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="register">Register</string>
+    <string name="repeat_password_hint">Repeat your password...</string>
+    <string name="password_hint">Your password...</string>
+    <string name="email_hint">Your email...</string>
+    <string name="no_account">No account?</string>
+    <string name="login">Login</string>
+    <string name="username_hint">Your username...</string>
+    <string name="apartment_image">Apartment Image</string>
+    <string name="apartment_type_image">Apartment Type Image</string>
+    <string name="change_password">Change password</string>
+    <string name="my_posts">My posts</string>
+</resources>

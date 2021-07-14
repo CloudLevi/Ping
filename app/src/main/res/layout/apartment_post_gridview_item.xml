@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/listview_item_background">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/aptImageView"
+        android:layout_width="match_parent"
+        android:layout_height="184dp"
+        android:layout_margin="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/progress_image_bigger" />
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:minLines="2"
+        android:maxLines="2"
+        android:paddingEnd="16dp"
+        android:textColor="@color/text_color_dark"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/aptImageView"
+        tools:text="testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest" />
+
+    <TextView
+        android:id="@+id/priceTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/text_color_dark"
+        android:textSize="23sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@id/titleTextView"
+        app:layout_constraintTop_toBottomOf="@id/titleTextView"
+        tools:text="25$" />
+
+    <TextView
+        android:id="@+id/priceTypeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:textColor="@color/text_color_dark"
+        android:textSize="13sp"
+        app:layout_constraintStart_toStartOf="@id/priceTextView"
+        app:layout_constraintTop_toBottomOf="@id/priceTextView"
+        tools:text="/month" />
+
+    <TextView
+        android:id="@+id/locationTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:drawablePadding="1dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingEnd="16dp"
+        android:textColor="@color/text_color_dark"
+        android:textSize="12sp"
+        app:drawableLeftCompat="@drawable/ic_baseline_location_on_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/priceTypeTextView"
+        app:layout_constraintTop_toBottomOf="@id/priceTypeTextView"
+        app:layout_constraintEnd_toStartOf="@+id/ratingTextView"
+        tools:text="Washington Street 1, New Orleansdjdfhehrjqwrhjqrjqfdgfjkldsgjksdgksdg" />
+
+    <TextView
+        android:id="@+id/ratingTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:drawablePadding="1dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/text_color_dark"
+        android:textSize="12sp"
+        android:drawableEnd="@drawable/ic_star"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/priceTypeTextView"
+        tools:text="4,7" />
+
+    <ImageView
+        android:id="@+id/apartmentType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/apartment_type_image"
+        app:layout_constraintBottom_toBottomOf="@id/priceTypeTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/priceTextView"
+        tools:src="@drawable/ic_residential_block" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:background="@drawable/listview_item_background">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/aptImageView"
+        android:layout_width="144dp"
+        android:layout_height="144dp"
+        android:layout_centerVertical="true"
+        android:layout_margin="16dp"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/apartment_image"
+        android:outlineProvider="background"
+        tools:src="@drawable/nazar" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/infoLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignTop="@id/aptImageView"
+        android:layout_alignBottom="@id/aptImageView"
+        android:layout_toEndOf="@id/aptImageView">
+
+        <TextView
+            android:id="@+id/titleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingEnd="8dp"
+            android:textColor="@color/text_color_dark"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="titletitletitletitletitletitletitletitletitletitletitletitletitletitle" />
+
+        <TextView
+            android:id="@+id/ratingTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/titleTextView"
+            android:layout_alignParentBottom="true"
+            android:drawablePadding="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/text_color_dark"
+            android:textSize="13sp"
+            app:drawableLeftCompat="@drawable/ic_star"
+            app:layout_constraintTop_toBottomOf="@+id/priceLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="4,7" />
+
+        <TextView
+            android:id="@+id/locationTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:drawablePadding="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/text_color_dark"
+            android:textSize="13sp"
+            app:drawableLeftCompat="@drawable/ic_baseline_location_on_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="Washington Street 1, New Orleans" />
+
+        <LinearLayout
+            android:id="@+id/priceLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/locationTextView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTextView">
+
+            <TextView
+                android:id="@+id/priceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginEnd="8dp"
+                android:textColor="@color/text_color_dark"
+                android:textSize="23sp"
+                android:textStyle="bold"
+                tools:text="25$" />
+
+            <TextView
+                android:id="@+id/priceTypeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:textColor="@color/text_color_dark"
+                android:textSize="13sp"
+                tools:text="/month" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/apartmentType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@string/apartment_type_image"
+            app:layout_constraintBottom_toBottomOf="@id/priceLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/priceLayout"
+            tools:src="@drawable/ic_residential_block" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</RelativeLayout>

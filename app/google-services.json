@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "407708783580",
+    "project_id": "pingapp-8383c",
+    "storage_bucket": "pingapp-8383c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407708783580:android:898b78c2b882b7d282b519",
+        "android_client_info": {
+          "package_name": "com.cloudlevi.ping"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "407708783580-1trovfueeo34bmp53f6n4025uv9dd9er.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe0HTMxMJRhH19W4IOAYbgRCR1f0ToGf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "407708783580-1trovfueeo34bmp53f6n4025uv9dd9er.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

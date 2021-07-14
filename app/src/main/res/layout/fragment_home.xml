@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_purple">
+
+    <RelativeLayout
+        android:id="@+id/mainRelativeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/rounded_corner_bg"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="8dp"
+            android:hint="Search"
+            android:maxLines="1"
+            android:inputType="text"
+            android:imeOptions="actionGo"
+            android:layout_toStartOf="@+id/change_layoutManager"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColorHint="#676767" />
+
+        <ImageView
+            android:id="@+id/filter_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignTop="@+id/searchEditText"
+            android:layout_alignBottom="@id/searchEditText"
+            android:layout_alignEnd="@+id/searchEditText"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_filter" />
+
+        <ImageView
+            android:id="@+id/change_layoutManager"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignTop="@+id/searchEditText"
+            android:layout_alignBottom="@id/searchEditText"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="8dp"
+            android:src="@drawable/ic_listview" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/apartmentsRecyclerView"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/change_layoutManager" />
+
+        <TextView
+            android:id="@+id/nothingFoundTV"
+            android:visibility="gone"
+            android:layout_below="@+id/change_layoutManager"
+            android:layout_width="match_parent"
+            android:paddingTop="128dp"
+            android:textColor="@color/white"
+            android:shadowDy="2"
+            android:shadowDx="2"
+            android:shadowColor="@color/black"
+            android:shadowRadius="5"
+            android:gravity="top|center_horizontal"
+            android:textSize="40sp"
+            android:text="Nothing found!"
+            android:layout_height="match_parent"/>
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
+</FrameLayout>

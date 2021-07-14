@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_purple">
+
+    <RelativeLayout
+        android:id="@+id/mainRelativeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/landLordName"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:ellipsize="end"
+            android:layout_toStartOf="@+id/profile_image"
+            android:maxLength="35"
+            android:maxLines="1"
+            android:textColor="@color/text_color"
+            android:textSize="20sp"
+            tools:text="Name Surname" />
+
+        <TextView
+            android:id="@+id/landLordUserName"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:ellipsize="end"
+            android:maxLength="35"
+            android:maxLines="1"
+            android:textColor="@color/text_color"
+            android:textSize="14sp"
+            android:layout_below="@+id/landLordName"
+            android:layout_toStartOf="@+id/profile_image"
+            tools:text="username" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_image"
+            android:visibility="gone"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_profile_picture"
+            android:layout_alignTop="@+id/landLordName"
+            android:layout_alignParentEnd="true"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/userListsRecycler"
+            android:layout_below="@+id/profile_image"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
+</FrameLayout>
