@@ -133,7 +133,7 @@ class RegisterFragmentViewModel @Inject constructor(
         databaseUsersReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (dataSnapshot in snapshot.children) {
-                    if (dataSnapshot.child("username").getValue().toString() == registerUserName) usernameExists = true
+                    if (dataSnapshot.child("username").value.toString() == registerUserName) usernameExists = true
                 }
 
                 if (usernameExists) sendToastMessage("This username already exists. Please choose a new one.")
@@ -141,7 +141,7 @@ class RegisterFragmentViewModel @Inject constructor(
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+                sendToastMessage("Network error. Please try again later")
             }
 
         })

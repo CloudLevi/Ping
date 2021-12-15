@@ -16,12 +16,16 @@ import java.text.DecimalFormat
 class UserPostsAdapter(
     var apartmentList: ArrayList<ApartmentHomePost>,
     private val listener: OnPostClickedListener
-    ): RecyclerView.Adapter<UserPostsAdapter.UserListsViewHolder>() {
+) : RecyclerView.Adapter<UserPostsAdapter.UserListsViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserListsViewHolder {
-        return UserListsViewHolder(ApartmentPostListviewItemBinding
-            .inflate(LayoutInflater
-                .from(parent.context), parent, false))
+        return UserListsViewHolder(
+            ApartmentPostListviewItemBinding
+                .inflate(
+                    LayoutInflater
+                        .from(parent.context), parent, false
+                )
+        )
     }
 
     override fun onBindViewHolder(holder: UserListsViewHolder, position: Int) {
@@ -33,8 +37,8 @@ class UserPostsAdapter(
         return apartmentList.size
     }
 
-    inner class UserListsViewHolder(private val binding: ApartmentPostListviewItemBinding)
-        : RecyclerView.ViewHolder(binding.root){
+    inner class UserListsViewHolder(private val binding: ApartmentPostListviewItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(aptPost: ApartmentHomePost) {
 
@@ -54,10 +58,10 @@ class UserPostsAdapter(
             binding.apply {
                 titleTextView.text = aptPost.title
                 locationTextView.text = locationString
-                priceTextView.text = addRearSymbol(aptPost.price.toString(), "$")
+                priceTextView.text = aptPost.getPricingText()
                 priceTypeTextView.text = priceType
                 apartmentType.setImageResource(apartmentDrawable)
-                ratingTextView.text = df.format(aptPost.rating)
+                ratingTextView.text = df.format(aptPost.calculateAverageRating())
 
                 Glide.with(itemView)
                     .load(aptPost.firstImageReference)
@@ -70,22 +74,22 @@ class UserPostsAdapter(
                     .build()
 
                 root.setOnClickListener {
-                    listener.onItemClickedListener(aptPost.apartmentPostID)
+                    listener.onItemClickedListener(aptPost)
                 }
             }
         }
     }
 
-    private fun addRearSymbol(text: String, symbol: String): String{
+    private fun addRearSymbol(text: String, symbol: String): String {
         return "$text$symbol"
     }
 
-    private fun determineRoomText(roomAmount: Int): String{
+    private fun determineRoomText(roomAmount: Int): String {
         return if (roomAmount % 10 == 1) "$roomAmount room"
         else "$roomAmount rooms"
     }
 
-    interface OnPostClickedListener{
-        fun onItemClickedListener(aptID: String)
+    interface OnPostClickedListener {
+        fun onItemClickedListener(apHomePost: ApartmentHomePost)
     }
 }

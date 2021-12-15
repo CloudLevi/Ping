@@ -14,6 +14,7 @@ import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.data.PreferencesManager
 import com.cloudlevi.ping.data.User
+import com.cloudlevi.ping.ext.SimpleEventListener
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -27,7 +28,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -149,17 +149,13 @@ class LoginFragmentViewModel @Inject constructor(
         var userExists = false
 
         if (userID != null){
-            databaseUsersRef.addListenerForSingleValueEvent(object: ValueEventListener{
+            databaseUsersRef.addListenerForSingleValueEvent(object: SimpleEventListener(){
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (currentUser in snapshot.children){
-                        val userModel: User = currentUser.getValue(User::class.java)!!
+                        val userModel: User = currentUser.getValue(User::class.java)?: return
                         userExists = userModel.userID == userID
                     }
                     if(!userExists) registerGoogleUser(userID, googleAcct.email, googleAcct.displayName, googleAcct.email?.substringBefore("@"))
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
                 }
             })
         }

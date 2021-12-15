@@ -91,6 +91,9 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_myProfileFragment_to_yourBookingsFragment"
+            app:destination="@id/yourBookingsFragment" />
     </fragment>
     <fragment
         android:id="@+id/addPostFragment"
@@ -100,9 +103,9 @@
         android:id="@+id/apartmentPageFragment"
         android:name="com.cloudlevi.ping.ui.apartmentPage.ApartmentPageFragment"
         android:label="ApartmentPageFragment">
-        <argument
-            android:name="apartmentID"
-            app:argType="string" />
+<!--        <argument-->
+<!--            android:name="apartmentID"-->
+<!--            app:argType="string" />-->
         <action
             android:id="@+id/action_apartmentPageFragment_to_userPostsFragment"
             app:destination="@id/userPostsFragment" />
@@ -110,6 +113,12 @@
             android:name="fromUserLists"
             app:argType="boolean"
             android:defaultValue="false" />
+        <action
+            android:id="@+id/action_apartmentPageFragment_to_bookingFragment"
+            app:destination="@id/bookingFragment" />
+        <argument
+            android:name="apartmentHomePost"
+            app:argType="com.cloudlevi.ping.data.ApartmentHomePost" />
     </fragment>
     <fragment
         android:id="@+id/filtersFragment"
@@ -139,7 +148,15 @@
             app:popExitAnim="@anim/slide_out_right" />
         <argument
             android:name="userModel"
-            app:argType="com.cloudlevi.ping.data.User" />
+            app:argType="com.cloudlevi.ping.data.User"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_userPostsFragment_to_userChatFragment"
+            app:destination="@id/userChatFragment" />
+        <argument
+            android:name="userID"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
     <fragment
         android:id="@+id/changeDisplayNameFragment"
@@ -154,5 +171,52 @@
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/slide_in_right"
             app:popExitAnim="@anim/slide_out_left"/>
+    </fragment>
+    <fragment
+        android:id="@+id/userChatFragment"
+        android:name="com.cloudlevi.ping.ui.userChat.UserChatFragment"
+        android:label="UserChatFragment" >
+
+        <argument
+            android:name="userModel"
+            app:argType="com.cloudlevi.ping.data.User"
+            app:nullable="true" />
+
+        <argument
+            android:name="chatListItem"
+            app:argType="com.cloudlevi.ping.data.ChatListItem"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/chatsFragment"
+        android:name="com.cloudlevi.ping.ui.chats.ChatsFragment"
+        android:label="ChatsFragment" >
+        <action
+            android:id="@+id/action_chatsFragment_to_userChatFragment"
+            app:destination="@id/userChatFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/bookingFragment"
+        android:name="com.cloudlevi.ping.ui.bookingFragment.BookingFragment"
+        android:label="BookingFragment" >
+        <argument
+            android:name="apartmentHomePost"
+            app:argType="com.cloudlevi.ping.data.ApartmentHomePost" />
+        <argument
+            android:name="landLord"
+            app:argType="com.cloudlevi.ping.data.User" />
+        <action
+            android:id="@+id/action_bookingFragment_to_yourBookingsFragment"
+            app:destination="@id/yourBookingsFragment"
+            app:popUpTo="@id/bookingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/yourBookingsFragment"
+        android:name="com.cloudlevi.ping.ui.yourBookings.YourBookingsFragment"
+        android:label="YourBookingsFragment" >
+        <argument
+            android:name="rentalMode"
+            app:argType="com.cloudlevi.ping.data.RentalMode" />
     </fragment>
 </navigation>

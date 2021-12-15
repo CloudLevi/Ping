@@ -10,7 +10,8 @@ data class User(
     var email: String? = "",
     var displayName: String? = "",
     var username: String? = "",
-    var imageUrl: String? = ""
+    var imageUrl: String? = "",
+    var userOnline: Boolean? = false
 ):Parcelable{
     @IgnoredOnParcel
     var rateList: ArrayList<RatedPost> = arrayListOf()

@@ -10,13 +10,14 @@
         android:layout_margin="8dp"
         android:background="@drawable/button_image_selection" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/imageDeleteButton"
         android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right|top"
+        android:layout_gravity="end|top"
         android:layout_margin="16dp"
-        android:background="@drawable/icon_delete_cross" />
+        android:background="@drawable/ripple_simple_bg"
+        android:src="@drawable/icon_delete_cross" />
 
 </FrameLayout>

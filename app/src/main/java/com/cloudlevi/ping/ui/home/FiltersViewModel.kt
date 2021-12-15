@@ -42,6 +42,42 @@ class FiltersViewModel @Inject constructor(
         else rent_type.add(id)
     }
 
+    fun getRatings(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+        val range = sliderMin..sliderMax
+        if (minRating !in range || maxRating !in range){
+            minRating = sliderMin
+            maxRating = sliderMax
+        }
+        return Pair(minRating, maxRating)
+    }
+
+    fun getFloors(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+        val range = sliderMin..sliderMax
+        if (minFloor !in range || maxFloor !in range){
+            minFloor = sliderMin
+            maxFloor = sliderMax
+        }
+        return Pair(minFloor, maxFloor)
+    }
+
+    fun getRooms(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+        val range = sliderMin..sliderMax
+        if (minRooms !in range || maxRooms !in range){
+            minRooms = sliderMin
+            maxRooms = sliderMax
+        }
+        return Pair(minRooms, maxRooms)
+    }
+
+    fun getPrice(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+        val range = sliderMin..sliderMax
+        if (minPrice !in range || maxPrice !in range){
+            minPrice = sliderMin
+            maxPrice = sliderMax
+        }
+        return Pair(minPrice, maxPrice)
+    }
+
     fun resetFilters(totalMaxFloor: Float, totalMaxRooms: Float, totalMaxPrice: Float){
         sort_type = -1
         apt_type = APT_TYPE_ALL

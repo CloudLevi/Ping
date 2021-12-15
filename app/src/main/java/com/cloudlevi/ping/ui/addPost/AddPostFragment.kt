@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -18,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -25,13 +27,16 @@ import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.AddImageModel
 import com.cloudlevi.ping.databinding.FragmentAddPostBinding
 import com.cloudlevi.ping.ui.addPost.AddPostFragmentEvent.*
+import com.cloudlevi.ping.ui.addPost.AddPostFragmentViewModel.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import java.io.ByteArrayOutputStream
 
 
 @AndroidEntryPoint
-class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.OnCLickedListener {
+class AddPostFragment :
+    BaseFragment<FragmentAddPostBinding>(R.layout.fragment_add_post, true),
+    AddImageAdapter.OnCLickedListener {
 
     private val viewModel: AddPostFragmentViewModel by activityViewModels()
     private lateinit var binding: FragmentAddPostBinding
@@ -39,16 +44,35 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
     private lateinit var addImageAdapter: AddImageAdapter
     private lateinit var byteArrayData: ByteArray
 
+    override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentAddPostBinding =
+        FragmentAddPostBinding::inflate
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        super.onCreateView(inflater, container, savedInstanceState)
+
+        binding = FragmentAddPostBinding.inflate(inflater, container, false)
+
+        viewModel.action.observe(viewLifecycleOwner) {
+            when (it.actionType) {
+                AddPostAction.ADAPTER_CHANGED -> addImageAdapter.update()
+            }
+        }
+
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding = FragmentAddPostBinding.bind(view)
+        addImageAdapter = AddImageAdapter(this, viewModel)
 
-        addImageAdapter = AddImageAdapter(this)
-
-        binding.fragmentAddPostScrollView.post(Runnable {
+        binding.fragmentAddPostScrollView.post {
             binding.fragmentAddPostScrollView.scrollTo(0, viewModel.scrollPositionY)
-        })
+        }
 
         switchAptTypeColors(viewModel.aptTypeValue)
         switchPriceTypeColors(viewModel.priceType)
@@ -163,13 +187,10 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
             }
 
             if (!viewModel.isImagesArrayInitialized) {
-                viewModel.imagesArray = arrayListOf(
-                    AddImageModel(0),
-                    AddImageModel(1),
-                    AddImageModel(2),
-                    AddImageModel(3),
-                    AddImageModel(4)
-                )
+                viewModel.imagesArray.clear()
+                for (a in 0..4) {
+                    viewModel.imagesArray.add(AddImageModel(a))
+                }
                 viewModel.isImagesArrayInitialized = true
             } else {
                 viewModel.insertPreviousImages()
@@ -182,14 +203,11 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
                 setHasFixedSize(true)
             }
 
-            viewModel.imagesArrayLiveData.observe(viewLifecycleOwner) {
-                addImageAdapter.submitList(it)
-                addImageAdapter.notifyDataSetChanged()
-            }
-
-            viewModel.progressTextLiveData.observe(viewLifecycleOwner){
+            viewModel.progressTextLiveData.observe(viewLifecycleOwner) {
                 progressTV.text = it
             }
+
+            addImageAdapter.update()
 
         }
 
@@ -200,7 +218,7 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
                     is FurnishedValueChanged -> switchFurnishedBTNColor(event.furnishedValue)
                     is PriceTypeChange -> switchPriceTypeColors(event.priceType)
                     is UpdateAdapterValues -> {
-                        addImageAdapter.submitList(viewModel.imagesArray)
+                        addImageAdapter.update()
                         addImageAdapter.notifyDataSetChanged()
                     }
                     is ChangeProgressbarStatus -> changeProgressStatus(event.status)
@@ -287,7 +305,7 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
                         )
                     )
                 binding.furnishingBTN
-                    .text = "No"
+                    .text = getString(R.string.no)
             }
             true -> {
                 binding.furnishingBTN
@@ -298,7 +316,7 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
                         )
                     )
                 binding.furnishingBTN
-                    .text = "Yes"
+                    .text = getString(R.string.yes)
             }
         }
     }
@@ -382,7 +400,7 @@ class AddPostFragment : Fragment(R.layout.fragment_add_post), AddImageAdapter.On
     }
 
     override fun onRemoveButtonClicked(addImageModel: AddImageModel) {
-        viewModel.onImageRemoveButtonCLicked(addImageModel)
+        viewModel.onImageRemoveButtonClicked(addImageModel)
     }
 
     override fun onDestroyView() {

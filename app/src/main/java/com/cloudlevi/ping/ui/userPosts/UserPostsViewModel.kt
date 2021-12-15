@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.data.PreferencesManager
+import com.cloudlevi.ping.data.RatingModel
 import com.cloudlevi.ping.data.User
+import com.cloudlevi.ping.ext.ActionLiveData
+import com.cloudlevi.ping.ext.SimpleEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -17,20 +20,26 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.cloudlevi.ping.ui.userPosts.UserPostsEvent.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class UserPostsViewModel @Inject constructor(
     private val dataStoreManager: PreferencesManager
-):ViewModel() {
+) : ViewModel() {
 
-    var homePostsLiveData = MutableLiveData<ArrayList<ApartmentHomePost>>()
+    val action = ActionLiveData<Action>()
+
     private val databaseApartments = Firebase.database.reference.child("apartments")
-    private var currentUserID = ""
-    private var currentUserLists = ArrayList<ApartmentHomePost>()
+    private val usersRef = Firebase.database.reference.child("users")
 
-    private val userPostsEventChannel = Channel<UserPostsEvent>()
-    val userPostsEvent = userPostsEventChannel.receiveAsFlow()
+    var currentUserID = ""
+    var currentUserLists = listOf<ApartmentHomePost>()
+
+    var otherUserModel: User? = null
+
+    var currency = "USD"
+    var exRate = 1.0
 
     init {
         viewModelScope.launch {
@@ -38,39 +47,88 @@ class UserPostsViewModel @Inject constructor(
         }
     }
 
+    fun fragmentCreate() {
+        runBlocking {
+            currency = dataStoreManager.getCurrency()
+            exRate = dataStoreManager.getExRate()
+        }
+
+        currentUserLists.forEach {
+            it.applyCurrency(currency, exRate)
+        }
+        action.set(Action(ActionType.LIST_UPDATED))
+    }
+
     fun getPosts(userModel: User) {
+        toggleLoading(true)
+        otherUserModel = userModel
         if (userModel.userID != currentUserID)
-            displayUserInfo(true, userModel)
+            displayUserInfo(userModel)
 
-        databaseApartments.addListenerForSingleValueEvent(object: ValueEventListener {
+        listenToPosts(userModel.userID ?: "")
+    }
+
+    fun getPosts(userID: String) {
+        toggleLoading(true)
+        getUserModel(userID)
+    }
+
+    private fun getUserModel(userID: String) {
+        usersRef.child(userID).addListenerForSingleValueEvent(object : SimpleEventListener() {
             override fun onDataChange(snapshot: DataSnapshot) {
-                currentUserLists.clear()
-                for (post in snapshot.children){
-                    val currentPost = post.getValue(ApartmentHomePost::class.java)
-                    if (currentPost?.landLordID == userModel.userID!!)
-                        currentUserLists.add(currentPost)
-                }
-                homePostsLiveData.value = currentUserLists
-            }
+                super.onDataChange(snapshot)
+                otherUserModel = snapshot.getValue(User::class.java)
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.d("TAG", "Error: ${error.message}")
-                sendToastMessage("Error loading posts")
+                displayUserInfo(otherUserModel)
+                listenToPosts(userID)
             }
-
         })
     }
 
-    private fun sendToastMessage(message: String) = viewModelScope.launch {
-        userPostsEventChannel.send(SendToastMessage(message))
+    private fun listenToPosts(userID: String) {
+        databaseApartments
+            .orderByChild("landLordID")
+            .equalTo(userID)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    currentUserLists = snapshot.children.mapNotNull { childSnapshot ->
+                        ApartmentHomePost.createFromSnapshot(childSnapshot, currency, exRate)
+                    }
+                    action.set(Action(ActionType.LIST_UPDATED))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d("TAG", "Error: ${error.message}")
+                    sendToastMessage("Error loading posts")
+                }
+            })
     }
 
-    private fun displayUserInfo(status: Boolean, userModel: User) = viewModelScope.launch {
-        userPostsEventChannel.send(DisplayUserInfo(status, userModel))
+    private fun sendToastMessage(message: String) =
+        action.set(Action(ActionType.SEND_TOAST, string = message))
+
+    private fun displayUserInfo(userModel: User?) =
+        action.set(Action(ActionType.DISPLAY_USER_INFO, userModel = userModel))
+
+    private fun toggleLoading(isLoading: Boolean) =
+        action.set(Action(ActionType.TOGGLE_LOADING, bool = isLoading))
+
+    enum class ActionType {
+        TOGGLE_LOADING,
+        LIST_UPDATED,
+        SEND_TOAST,
+        DISPLAY_USER_INFO
     }
+
+    data class Action(
+        val type: ActionType,
+        val bool: Boolean? = null,
+        val string: String? = null,
+        val userModel: User? = null
+    )
 }
 
-sealed class UserPostsEvent{
-    data class SendToastMessage(val message: String): UserPostsEvent()
-    data class DisplayUserInfo(val status: Boolean, val userModel: User): UserPostsEvent()
+sealed class UserPostsEvent {
+    data class SendToastMessage(val message: String) : UserPostsEvent()
+    data class DisplayUserInfo(val status: Boolean, val userModel: User) : UserPostsEvent()
 }

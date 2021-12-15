@@ -1,69 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_purple">
+    android:background="@color/bg_main">
 
-    <RelativeLayout
-        android:id="@+id/mainRelativeLayout"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/landLordName"
-            android:visibility="gone"
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="32dp"
-            android:ellipsize="end"
-            android:layout_toStartOf="@+id/profile_image"
-            android:maxLength="35"
-            android:maxLines="1"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            tools:text="Name Surname" />
+            android:background="@color/bg_main"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <TextView
-            android:id="@+id/landLordUserName"
-            android:visibility="gone"
+            <TextView
+                android:id="@+id/titleTV"
+                style="@style/BoldTextStyleMargins"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:textSize="32sp"
+                app:layout_scrollFlags="scroll" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/mainRelativeLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="32dp"
-            android:ellipsize="end"
-            android:maxLength="35"
-            android:maxLines="1"
-            android:textColor="@color/text_color"
-            android:textSize="14sp"
-            android:layout_below="@+id/landLordName"
-            android:layout_toStartOf="@+id/profile_image"
-            tools:text="username" />
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/profile_image"
-            android:visibility="gone"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_profile_picture"
-            android:layout_alignTop="@+id/landLordName"
-            android:layout_alignParentEnd="true"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/userInfoLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:paddingBottom="8dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/userListsRecycler"
-            android:layout_below="@+id/profile_image"
-            android:layout_marginTop="8dp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </RelativeLayout>
+                <TextView
+                    android:id="@+id/landLordName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_toStartOf="@+id/profile_image"
+                    android:ellipsize="end"
+                    android:maxLength="35"
+                    android:maxLines="1"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toStartOf="@+id/profile_image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Name Surname" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
+                <TextView
+                    android:id="@+id/landLordUserName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLength="35"
+                    android:maxLines="1"
+                    android:textColor="@color/text_color"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toStartOf="@id/profile_image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/landLordName"
+                    tools:text="username" />
+
+                <Button
+                    android:id="@+id/sendMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="32dp"
+                    android:ellipsize="end"
+                    android:maxLength="35"
+                    android:maxLines="1"
+                    android:text="@string/send_message"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="@id/landLordUserName"
+                    app:layout_constraintTop_toBottomOf="@+id/landLordUserName"
+                    tools:text="username" />
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:src="@drawable/ic_profile_picture"
+                    app:layout_constraintBottom_toBottomOf="@+id/sendMessage"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/landLordName" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/userListsRecycler"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:overScrollMode="never"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/userInfoLayout" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <FrameLayout
+        android:id="@+id/progressLayout"
+        android:layout_width="match_parent"
         android:visibility="gone"
-        android:layout_gravity="center"
-        android:layout_width="48dp"
-        android:layout_height="48dp"/>
+        android:layout_height="match_parent"
+        android:background="@color/black_transparent">
+
+        <ProgressBar
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
+
 </FrameLayout>

@@ -1,349 +1,374 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="?attr/actionBarSize"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <ImageView
-            android:id="@+id/cancelButton"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:src="@drawable/ic_cancel"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/fragmentTV"
-            app:layout_constraintBottom_toBottomOf="@id/fragmentTV" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/bg_main"
+            android:orientation="horizontal"
+            app:layout_scrollFlags="scroll">
 
-        <TextView
-            android:id="@+id/fragmentTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:ellipsize="end"
-            android:gravity="end"
-            android:maxLines="1"
-            android:shadowColor="@color/black"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="3"
-            android:text="Filters"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@id/cancelButton"
-            app:layout_constraintTop_toTopOf="parent" />
+            <ImageView
+                android:id="@+id/cancelButton"
+                android:layout_width="?attr/actionBarSize"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@drawable/ripple_simple_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="14dp"
+                android:src="@drawable/ic_baseline_arrow_back_24"
+                app:tint="@color/text_color" />
 
-        <Button
-            android:id="@+id/clearFiltersButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Clear filters"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:textColor="@color/text_color"
-            android:textStyle="bold"
-            android:textSize="13sp"
-            android:background="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/fragmentTV" />
+            <TextView
+                android:id="@+id/addAnApartmentTV"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:layout_toStartOf="@+id/clearFiltersButton"
+                android:layout_toEndOf="@+id/cancelButton"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp"
+                android:text="@string/filters"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                app:autoSizeMaxTextSize="22sp"
+                app:autoSizeMinTextSize="18sp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/sortRecycler"
+            <TextView
+                android:id="@+id/clearFiltersButton"
+                android:layout_width="72dp"
+                android:layout_height="?attr/actionBarSize"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/ripple_simple_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:padding="4dp"
+                android:text="@string/clear"
+                android:textColor="@color/text_color"
+                android:textSize="14sp"
+                app:autoSizeMaxTextSize="14sp"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
+
+        </RelativeLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:overScrollMode="never"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/fragmentTV" />
+            android:background="@color/bg_main">
 
-        <TextView
-            android:id="@+id/aptTypeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Apartment type:"
-            android:textColor="@color/text_color"
-            android:textSize="20dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sortRecycler" />
-
-        <RadioGroup
-            android:id="@+id/aptTypeGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/aptTypeTV">
-
-            <RadioButton
-                android:id="@+id/aptTypeFlat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Flat"
-                android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/aptTypeHouse"
+            <TextView
+                android:id="@+id/aptTypeTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="House"
+                android:layout_marginTop="8dp"
+                android:text="@string/apartment_type"
                 android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <RadioButton
-                android:id="@+id/aptTypeAll"
+            <RadioGroup
+                android:id="@+id/aptTypeGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:checked="true"
-                android:text="Both"
-                android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </RadioGroup>
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/aptTypeTV">
 
-        <TextView
-            android:id="@+id/furnishedTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Furniture:"
-            android:textColor="@color/text_color"
-            android:textSize="20dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/aptTypeGroup" />
-
-        <RadioGroup
-            android:id="@+id/furnitureGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/furnishedTV">
-
-            <RadioButton
-                android:id="@+id/furnitureAll"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:checked="true"
-                android:text="All"
-                android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/furnitureYes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="Yes"
-                android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/furnitureNo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="No"
-                android:textColor="@color/text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </RadioGroup>
-
-        <TextView
-            android:id="@+id/rentTypeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Rent type:"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/furnitureGroup" />
-
-        <ScrollView
-            android:id="@+id/rentTypeGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rentTypeTV">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/rentAll"
+                <RadioButton
+                    android:id="@+id/aptTypeFlat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/flat"
+                    android:textColor="@color/text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <RadioButton
+                    android:id="@+id/aptTypeHouse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/house"
+                    android:textColor="@color/text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <RadioButton
+                    android:id="@+id/aptTypeAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
                     android:checked="true"
-                    android:text="All"
+                    android:text="@string/both"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+            </RadioGroup>
 
-                <CheckBox
-                    android:id="@+id/rentDaily"
+            <TextView
+                android:id="@+id/furnishedTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/furniture_"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/aptTypeGroup" />
+
+            <RadioGroup
+                android:id="@+id/furnitureGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/furnishedTV">
+
+                <RadioButton
+                    android:id="@+id/furnitureAll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Daily"
+                    android:layout_marginEnd="8dp"
+                    android:checked="true"
+                    android:text="@string/all"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <CheckBox
-                    android:id="@+id/rentWeekly"
+                <RadioButton
+                    android:id="@+id/furnitureYes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Weekly"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/yes"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <CheckBox
-                    android:id="@+id/rentMonthly"
+                <RadioButton
+                    android:id="@+id/furnitureNo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Monthly"
+                    android:layout_marginStart="16dp"
+                    android:text="@string/no"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+            </RadioGroup>
 
-            </LinearLayout>
-        </ScrollView>
+            <TextView
+                android:id="@+id/rentTypeTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/rent_type"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/furnitureGroup" />
 
-        <TextView
-            android:id="@+id/ratingRangeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Rating range:"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rentTypeGroup" />
+            <HorizontalScrollView
+                android:id="@+id/rentTypeGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:scrollbars="none"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/rentTypeTV">
 
-        <com.google.android.material.slider.RangeSlider
-            android:id="@+id/ratingRangeSlider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:stepSize="0.5"
-            android:valueFrom="0.0"
-            android:valueTo="5.0"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ratingRangeTV" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/floorRangeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Floor range:"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ratingRangeSlider" />
+                    <CheckBox
+                        android:id="@+id/rentAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:checked="true"
+                        android:text="@string/all"
+                        android:textColor="@color/text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-        <com.google.android.material.slider.RangeSlider
-            android:id="@+id/floorRangeSlider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:stepSize="1"
-            android:valueFrom="0"
-            android:valueTo="5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/floorRangeTV" />
+                    <CheckBox
+                        android:id="@+id/rentDaily"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/daily"
+                        android:textColor="@color/text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/roomsRangeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Room range:"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/floorRangeSlider" />
+                    <CheckBox
+                        android:id="@+id/rentWeekly"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/weekly"
+                        android:textColor="@color/text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-        <com.google.android.material.slider.RangeSlider
-            android:id="@+id/roomRangeSlider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:stepSize="1"
-            android:valueFrom="0"
-            android:valueTo="5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/roomsRangeTV" />
+                    <CheckBox
+                        android:id="@+id/rentMonthly"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="@string/monthly"
+                        android:textColor="@color/text_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/priceRangeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:text="Price range:"
-            android:textColor="@color/text_color"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/roomRangeSlider" />
+                </LinearLayout>
+            </HorizontalScrollView>
 
-        <com.google.android.material.slider.RangeSlider
-            android:id="@+id/priceRangeSlider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:stepSize="1"
-            android:valueFrom="0"
-            android:valueTo="5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/priceRangeTV" />
+            <TextView
+                android:id="@+id/ratingRangeTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/rating_range"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/rentTypeGroup" />
 
-        <Button
-            android:id="@+id/applyButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Apply filters"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/priceRangeSlider" />
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/ratingRangeSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:stepSize="0.5"
+                android:valueFrom="0.0"
+                android:valueTo="5.0"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ratingRangeTV" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/floorRangeTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/floor_range"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ratingRangeSlider" />
 
-</ScrollView>
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/floorRangeSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/floorRangeTV" />
+
+            <TextView
+                android:id="@+id/roomsRangeTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/room_range"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/floorRangeSlider" />
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/roomRangeSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/roomsRangeTV" />
+
+            <TextView
+                android:id="@+id/priceRangeTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/price_range"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/roomRangeSlider" />
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/priceRangeSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/priceRangeTV" />
+
+            <Button
+                android:id="@+id/applyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/apply_filters"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/priceRangeSlider" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -4,7 +4,9 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -16,9 +18,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.cloudlevi.ping.R
-import com.cloudlevi.ping.REQUEST_ERROR_EMAIL_FIELD
-import com.cloudlevi.ping.REQUEST_ERROR_PASSWORD_FIELD
+import com.cloudlevi.ping.*
+import com.cloudlevi.ping.databinding.FragmentHomeBinding
 import com.cloudlevi.ping.databinding.FragmentLoginBinding
 import com.cloudlevi.ping.ui.login.LoginFragmentDirections.actionLoginFragmentToHomeFragment
 import com.cloudlevi.ping.ui.login.LoginFragmentDirections.actionLoginFragmentToRegisterFragment
@@ -33,11 +34,14 @@ import kotlinx.coroutines.flow.collect
 
 
 @AndroidEntryPoint
-class LoginFragment: Fragment(R.layout.fragment_login) {
+class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login, false) {
 
     private lateinit var resultLauncher: ActivityResultLauncher<Intent>
     private val viewModel: LoginFragmentViewModel by viewModels()
     private lateinit var binding: FragmentLoginBinding
+
+    override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentLoginBinding =
+        FragmentLoginBinding::inflate
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -90,6 +94,7 @@ class LoginFragment: Fragment(R.layout.fragment_login) {
                     }
 
                     is NavigateToHomeScreen -> {
+                        (requireActivity() as MainActivity).setUserOnline(true)
                         findNavController().navigate(actionLoginFragmentToHomeFragment())
                     }
 

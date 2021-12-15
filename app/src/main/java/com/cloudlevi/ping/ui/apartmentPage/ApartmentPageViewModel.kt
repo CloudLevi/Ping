@@ -7,10 +7,9 @@ import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cloudlevi.ping.data.ApartmentHomePost
-import com.cloudlevi.ping.data.PreferencesManager
-import com.cloudlevi.ping.data.RatedPost
-import com.cloudlevi.ping.data.User
+import com.cloudlevi.ping.data.*
+import com.cloudlevi.ping.ext.ActionLiveData
+import com.cloudlevi.ping.ext.SimpleEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -23,46 +22,52 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class ApartmentPageViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
-): ViewModel() {
+) : ViewModel() {
 
     private val apartmentPageEventChannel = Channel<ApartmentPageEvent>()
     val apartmentPageEvent = apartmentPageEventChannel.receiveAsFlow()
 
-    private var databaseRef = Firebase.database.reference.child("apartments")
+    val action = ActionLiveData<Action>()
+
+    private var apartmentsRef = Firebase.database.reference.child("apartments")
     private var databaseUserRef = Firebase.database.reference.child("users")
+    private var bookingsRef = Firebase.database.reference.child("bookings")
     private var storageInstance = FirebaseStorage.getInstance()
     private var currentUserModel = User()
     private lateinit var storageRef: StorageReference
-    private var currentUserID: String = ""
+    var currentUserID: String = ""
     var apartmentID: String = ""
 
+    lateinit var reviewAdapter: ReviewAdapter
+
     var currentApartmentModel = ApartmentHomePost()
-    set(value) {
-        field = value
-        apartmentModelLiveData.value = value
-        getLandLordInfo(value)
-    }
+        set(value) {
+            field = value
+            apartmentModelLiveData.value = value
+            getLandLordInfo(value)
+        }
     var currentLandLordLiveData = MutableLiveData<User>()
 
-    var imageUrlList = HashMap<Int, String>()
-    val imageUrlListLiveData = MutableLiveData<HashMap<Int, String>>()
+    var imageUrlList = HashMap<Int, Uri>()
+    val imageUrlListLiveData = MutableLiveData<HashMap<Int, Uri>>()
 
     val apartmentModelLiveData = MutableLiveData<ApartmentHomePost>()
 
     init {
-        viewModelScope.launch {
+        runBlocking {
             currentUserID = preferencesManager.getUserID()
-            databaseUserRef.child(currentUserID).addValueEventListener(object: ValueEventListener{
+        }
+
+        viewModelScope.launch {
+            databaseUserRef.child(currentUserID).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    currentUserModel = snapshot.getValue(User::class.java)?: User()
-                    for (item in snapshot.child("rated_posts").children){
-                        currentUserModel.rateList.add(item.getValue(RatedPost::class.java)?: RatedPost())
-                    }
+                    currentUserModel = snapshot.getValue(User::class.java) ?: User()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -72,57 +77,92 @@ class ApartmentPageViewModel @Inject constructor(
         }
     }
 
-    fun onFragmentCreated(apartmentID: String){
+    fun onFragmentCreated(apHomePost: ApartmentHomePost) {
 
         changeProgressStatus(View.VISIBLE)
+        currentApartmentModel = apHomePost
 
-        this.apartmentID = apartmentID
+        reviewAdapter = ReviewAdapter(this)
 
-        databaseRef.child("/$apartmentID").addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(apartment: DataSnapshot) {
-                currentApartmentModel = apartment.getValue(ApartmentHomePost::class.java)?: ApartmentHomePost()
-                checkIfRatingClickable()
+        observePostRating()
 
-                storageRef = storageInstance.reference.child("ApartmentUploads").child(currentApartmentModel.timeStamp.toString())
-                val userProfileImageRef = storageInstance.reference.child("ProfileImages").child(currentApartmentModel.landLordID)
-                userProfileImageRef.downloadUrl.addOnSuccessListener {
-                    currentLandLordLiveData.value = currentLandLordLiveData.value?.copy(imageUrl = it.toString())
-                }
+        this.apartmentID = apHomePost.apartmentPostID
+        checkIfRatingClickable()
 
-                getImageLinks(currentApartmentModel)
+        storageRef = storageInstance.reference
+            .child("ApartmentUploads")
+            .child(currentApartmentModel.timeStamp.toString())
 
-            }
+        val userProfileImageRef = storageInstance.reference
+            .child("ProfileImages")
+            .child(currentApartmentModel.landLordID)
 
-            override fun onCancelled(error: DatabaseError) {
-                changeProgressStatus(View.GONE)
-                sendToastMessage(error.message)
-            }
-        })
+        toggleBooking(currentUserID != currentApartmentModel.landLordID)
+
+
+        userProfileImageRef.downloadUrl.addOnSuccessListener {
+            currentLandLordLiveData.value =
+                currentLandLordLiveData.value?.copy(imageUrl = it.toString())
+        }
+
+        checkBookings()
+
+        getImageLinks(currentApartmentModel)
     }
 
-    fun getUserModel(): User{
+    fun getUserModel(): User {
         return if (currentLandLordLiveData.value == null)
             User()
         else currentLandLordLiveData.value as User
     }
 
-    private fun getLandLordInfo(apartmentModel: ApartmentHomePost){
-        databaseUserRef.child(apartmentModel.landLordID).addListenerForSingleValueEvent(object: ValueEventListener{
-            override fun onDataChange(landLordInfo: DataSnapshot) {
-                val landLordModel = landLordInfo.getValue(User::class.java)!!
-                currentLandLordLiveData.value = landLordModel
-            }
+    private fun checkBookings() {
+        bookingsRef.orderByChild("tenantID")
+            .equalTo(currentUserID)
+            .addListenerForSingleValueEvent(object : SimpleEventListener() {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    super.onDataChange(snapshot)
 
-            override fun onCancelled(error: DatabaseError) {
-                sendToastMessage("Failed to load landlord information")
-            }
+                    val bookingList = snapshot.children.mapNotNull {
+                        BookingModel.createFromSnapshot(it)
+                    }
 
-        })
+                    Log.d(TAG, "onDataChange: bookingList: $bookingList")
+
+                    val currentApartmentBooking =
+                        bookingList.find {
+                            it.tenantID == currentUserID &&
+                            it.apartmentID == currentApartmentModel.apartmentPostID
+                        }
+
+                    Log.d(TAG, "onDataChange: currentApartmentBooking: $currentApartmentBooking")
+
+                    action.set(Action(ActionType.RATING_VISIBILITY, bool = currentApartmentBooking != null))
+                }
+            })
     }
 
-    private fun changeProgressStatus(status: Int) = viewModelScope.launch {
-        apartmentPageEventChannel.send(ChangeProgressStatus(status))
+    private fun getLandLordInfo(apartmentModel: ApartmentHomePost) {
+        databaseUserRef.child(apartmentModel.landLordID)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(landLordInfo: DataSnapshot) {
+                    val landLordModel = landLordInfo.getValue(User::class.java)!!
+                    currentLandLordLiveData.value = landLordModel
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    sendToastMessage("Failed to load landlord information")
+                }
+
+            })
     }
+
+    fun isRatingVisible() = currentUserID != currentApartmentModel.landLordID
+
+    private fun changeProgressStatus(status: Int, checkRating: Boolean = false) =
+        viewModelScope.launch {
+            apartmentPageEventChannel.send(ChangeProgressStatus(status, checkRating))
+        }
 
     private fun sendToastMessage(message: String) = viewModelScope.launch {
         apartmentPageEventChannel.send(SendToastMessage(message))
@@ -133,54 +173,157 @@ class ApartmentPageViewModel @Inject constructor(
             apartmentPageEventChannel.send(ChangeRatingClickable(true))
     }
 
-    private fun getImageLinks(apartmentModel: ApartmentHomePost){
+    private fun getImageLinks(apartmentModel: ApartmentHomePost) {
         var count = 0
 
-        for (currentChildID in 0..apartmentModel.imageCount){
+        for (currentChildID in 0..apartmentModel.imageCount) {
 
-                storageRef.child(currentChildID.toString()).downloadUrl.addOnSuccessListener { downloadURL ->
-                    imageUrlList[currentChildID] = downloadURL.toString()
-                    count += 1
-                    if (count > apartmentModel.imageCount) {
-                        imageUrlListLiveData.value = imageUrlList
-                        changeProgressStatus(View.GONE)
-                    }
-
-                }.addOnFailureListener {
-                    sendToastMessage(it.message.toString())
-                    changeProgressStatus(View.GONE)
+            storageRef.child(currentChildID.toString()).downloadUrl.addOnSuccessListener { downloadURL ->
+                imageUrlList[currentChildID] = downloadURL
+                count += 1
+                if (count > apartmentModel.imageCount) {
+                    imageUrlListLiveData.value = imageUrlList
+                    currentApartmentModel.imagesList = imageUrlList.values.toMutableList()
+                    changeProgressStatus(View.GONE, true)
                 }
-        }
-    }
 
-    fun ratingChanged(newRating: Float) {
-        for (item in currentUserModel.rateList){
-            if (item.post_id == currentApartmentModel.apartmentPostID){
-                val ratingDifference = newRating - item.rate
-                currentApartmentModel.ratingTotal += ratingDifference
-                currentApartmentModel.rating = currentApartmentModel.ratingTotal/currentApartmentModel.ratingQuantity
-
-                val newUserRating = item.copy(rate = newRating)
-
-                databaseRef.child(apartmentID).setValue(currentApartmentModel)
-                databaseUserRef.child(currentUserID).child("rated_posts").child(item.post_id).setValue(newUserRating)
-                return
+            }.addOnFailureListener {
+                sendToastMessage(it.message.toString())
+                changeProgressStatus(View.GONE, true)
             }
         }
-        //First rating of current user
-        currentApartmentModel.ratingQuantity += 1
-        currentApartmentModel.ratingTotal += newRating
-        currentApartmentModel.rating = currentApartmentModel.ratingTotal/currentApartmentModel.ratingQuantity
-
-        val newUserRating = RatedPost(post_id = currentApartmentModel.apartmentPostID, currentUserID, newRating)
-
-        databaseRef.child(apartmentID).setValue(currentApartmentModel)
-        databaseUserRef.child(currentUserID).child("rated_posts").child(currentApartmentModel.apartmentPostID).setValue(newUserRating)
     }
+
+    fun getCurrentUserRating() =
+        currentApartmentModel.findReviewForID(currentUserID)?.rating ?: 0.0
+
+    fun getCurrentUserComment() =
+        currentApartmentModel.findReviewForID(currentUserID)?.comment ?: ""
+
+    private fun observePostRating() {
+        apartmentsRef
+            .child(currentApartmentModel.apartmentPostID)
+            .child("ratings")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val ratings = snapshot.children.map { child ->
+                        child.getValue(RatingModel::class.java) ?: return
+                    }
+
+                    action.set(
+                        Action(
+                            ActionType.TOGGLE_REVIEWS_VISIBILITY,
+                            bool = !ratings.isNullOrEmpty()
+                        )
+                    )
+
+                    currentApartmentModel.ratingsList = ratings.toMutableList()
+                    reviewAdapter.update()
+
+                    parseRatingImages()
+
+                    Log.d(
+                        TAG,
+                        "onDataChange: updateRating: ${currentApartmentModel.calculateAverageRating()}"
+                    )
+                    action.set(
+                        Action(
+                            ActionType.UPDATE_RATING,
+                            avg = currentApartmentModel.calculateAverageRating(),
+                            currentApartmentModel.reviewsCount()
+                        )
+                    )
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d(TAG, "onCancelled: ${error.message}")
+                }
+
+            })
+    }
+
+    fun ratingChanged(rating: Float, comment: String) {
+        val ratingModel = RatingModel(
+            currentUserID,
+            currentUserModel.displayName,
+            currentUserModel.imageUrl,
+            currentApartmentModel.apartmentPostID,
+            rating.toDouble(),
+            comment,
+            System.currentTimeMillis()
+        )
+
+        val ratingsRef = apartmentsRef
+            .child(currentApartmentModel.apartmentPostID)
+            .child("ratings")
+
+        ratingsRef.child(currentUserID).setValue(ratingModel)
+    }
+
+    fun deleteReview() {
+        apartmentsRef
+            .child(currentApartmentModel.apartmentPostID)
+            .child("ratings")
+            .child(currentUserID).removeValue()
+    }
+
+    fun reviewClicked(review: RatingModel?) {
+        review ?: return
+        if (review.userID == currentUserID)
+            action.set(Action(ActionType.CURRENT_REVIEW_CLICK))
+        else action.set(Action(ActionType.OTHER_REVIEW_CLICK, string = review.userID))
+    }
+
+    private fun toggleBooking(isVisible: Boolean) = viewModelScope.launch {
+        apartmentPageEventChannel.send(ToggleBookVisibility(isVisible))
+    }
+
+    private fun parseRatingImages() {
+        currentApartmentModel.ratingsList.forEachIndexed { index, rModel ->
+            rModel.userID ?: return
+            databaseUserRef.child(rModel.userID).addListenerForSingleValueEvent(
+                object : SimpleEventListener() {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        super.onDataChange(snapshot)
+                        val user = snapshot.getValue(User::class.java)
+                        Log.d(TAG, "onDataChange: $user")
+                        action.set(
+                            Action(
+                                ActionType.UPDATE_RATING_IMAGE,
+                                string = user?.imageUrl,
+                                pos = index
+                            )
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    enum class ActionType {
+        UPDATE_RATING,
+        UPDATE_RATING_IMAGE,
+        TOGGLE_REVIEWS_VISIBILITY,
+        CURRENT_REVIEW_CLICK,
+        OTHER_REVIEW_CLICK,
+        RATING_VISIBILITY
+    }
+
+    data class Action(
+        val type: ActionType? = null,
+        val avg: Double? = null,
+        val count: Int? = null,
+        val string: String? = null,
+        val pos: Int? = null,
+        val bool: Boolean? = null
+    )
 }
 
-sealed class ApartmentPageEvent{
-    data class SendToastMessage(val message: String): ApartmentPageEvent()
-    data class ChangeRatingClickable(val status: Boolean): ApartmentPageEvent()
-    data class ChangeProgressStatus(val status: Int): ApartmentPageEvent()
+sealed class ApartmentPageEvent {
+    data class SendToastMessage(val message: String) : ApartmentPageEvent()
+    data class ChangeRatingClickable(val status: Boolean) : ApartmentPageEvent()
+    data class ChangeProgressStatus(val status: Int, val checkRating: Boolean = false) :
+        ApartmentPageEvent()
+
+    data class ToggleBookVisibility(val isVisible: Boolean) : ApartmentPageEvent()
 }

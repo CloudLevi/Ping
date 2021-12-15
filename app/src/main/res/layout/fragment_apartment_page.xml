@@ -4,36 +4,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_purple">
+    android:background="@color/bg_main">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp">
+        android:overScrollMode="never">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:id="@+id/mainConstraintLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/imageSlider"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_height="wrap_content">
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                app:layout_constraintBottom_toBottomOf="@+id/imageSlider"
-                app:layout_constraintEnd_toEndOf="@id/imageSlider"
-                app:layout_constraintStart_toStartOf="@+id/imageSlider"
-                app:tabIconTint="@color/image_slider_colors"
-                app:tabIndicatorColor="@android:color/transparent"
-                app:tabIndicatorHeight="0dp" />
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/imageSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    app:layout_constraintBottom_toBottomOf="@+id/imageSlider"
+                    app:layout_constraintEnd_toEndOf="@id/imageSlider"
+                    app:layout_constraintStart_toStartOf="@+id/imageSlider"
+                    app:tabIconTint="@color/image_slider_colors"
+                    app:tabIndicatorColor="@android:color/transparent"
+                    app:tabIndicatorHeight="0dp" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
                 android:id="@+id/timeTextView"
@@ -41,8 +47,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/imageSlider"
                 tools:text="11 may 2021" />
 
             <TextView
@@ -55,19 +59,17 @@
                 android:maxLength="70"
                 android:textColor="@color/text_color"
                 android:textSize="20sp"
-                app:layout_constraintTop_toBottomOf="@+id/timeTextView"
                 tools:text="Apartment in the city centre where you can live all the time with whomever you want, I don't exactly care " />
 
             <TextView
                 android:id="@+id/priceTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:textColor="@color/text_color"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="@id/timeTextView"
-                app:layout_constraintTop_toBottomOf="@+id/titleTextView"
                 tools:text="350$" />
 
             <com.google.android.material.chip.ChipGroup
@@ -81,16 +83,14 @@
                 android:orientation="horizontal"
                 app:barrierMargin="8dp"
                 app:flexWrap="wrap"
-                app:justifyContent="center"
-                app:layout_constraintStart_toStartOf="@id/priceTextView"
-                app:layout_constraintTop_toBottomOf="@+id/priceTextView">
+                app:justifyContent="center">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/priceTypeTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Payment type: Monthly"
+                    tools:text="Payment type: Monthly"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -99,7 +99,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Furnishing: Yes"
+                    tools:text="Furnishing: Yes"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -108,7 +108,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Floor: 12"
+                    tools:text="Floor: 12"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -117,7 +117,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Rooms: 12"
+                    tools:text="Rooms: 12"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -126,7 +126,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Apartment type: House"
+                    tools:text="Apartment type: House"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -135,7 +135,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Acreage: 58.6"
+                    tools:text="Acreage: 58.6"
                     android:textColor="@color/text_color"
                     android:textSize="13sp" />
 
@@ -145,13 +145,12 @@
                 android:id="@+id/descriptionTitleTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="32dp"
-                android:text="Description:"
+                android:layout_marginEnd="16dp"
+                android:text="@string/description"
                 android:textColor="@color/text_color"
-                android:textSize="20sp"
-                app:layout_constraintStart_toStartOf="@id/timeTextView"
-                app:layout_constraintTop_toBottomOf="@+id/attributeCollectionLayout" />
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/descriptionTV"
@@ -162,92 +161,123 @@
                 android:layout_marginEnd="16dp"
                 android:textColor="@color/text_color"
                 android:textSize="14sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/descriptionTitleTV"
                 tools:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum." />
 
             <TextView
                 android:id="@+id/locationTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:drawablePadding="2dp"
                 android:textColor="@color/text_color"
                 android:textSize="14sp"
                 app:drawableStartCompat="@drawable/ic_baseline_location_on_24"
                 app:drawableTint="@color/text_color"
-                app:layout_constraintStart_toStartOf="@id/descriptionTV"
-                app:layout_constraintTop_toBottomOf="@+id/descriptionTV"
                 tools:text="Marlboro Street 4, Missisipi" />
 
-            <RatingBar
-                android:id="@+id/ratingBar"
+            <TextView
+                android:id="@+id/ratingTV"
+                android:layout_marginTop="4dp"
+                app:drawableStartCompat="@drawable/ic_star"
+                tools:text="4.0 from 24 reviews"
+                style="@style/RegularTextStyleMargins"/>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/landLordName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="32dp"
+                    android:ellipsize="end"
+                    android:maxLength="35"
+                    android:maxLines="1"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toStartOf="@+id/profile_image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Name Surname" />
+
+                <TextView
+                    android:id="@+id/landLordUserName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="32dp"
+                    android:ellipsize="end"
+                    android:maxLength="35"
+                    android:maxLines="1"
+                    android:textColor="@color/text_color"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toStartOf="@+id/profile_image"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/landLordName"
+                    tools:text="username" />
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/ic_profile_picture"
+                    app:layout_constraintBottom_toBottomOf="@id/landLordUserName"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/landLordName" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:numStars="5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/locationTV" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/bookNowBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="24dp"
+                    android:text="@string/book_now" />
+
+                <Button
+                    android:id="@+id/rateBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/rate_us_now" />
+
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/ratingText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:id="@+id/reviewsTV"
+                android:textSize="22sp"
                 android:layout_marginStart="16dp"
-                android:layout_marginEnd="32dp"
-                android:textColor="@color/text_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ratingBar"
-                tools:text="Average rating of 5.0, out of x reviews" />
-
-            <TextView
-                android:id="@+id/landLordName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="32dp"
-                android:ellipsize="end"
-                android:maxLength="35"
-                android:maxLines="1"
-                android:textColor="@color/text_color"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toStartOf="@+id/profile_image"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ratingText"
-                tools:text="Name Surname" />
-
-            <TextView
-                android:id="@+id/landLordUserName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="32dp"
-                android:ellipsize="end"
-                android:maxLength="35"
-                android:maxLines="1"
-                android:textColor="@color/text_color"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toStartOf="@+id/profile_image"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/landLordName"
-                tools:text="username" />
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/profile_image"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
                 android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_profile_picture"
-                app:layout_constraintBottom_toBottomOf="@id/landLordUserName"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/landLordName" />
+                android:text="@string/reviews_"
+                style="@style/BoldTextStyle"/>
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/reviewRecycler"
+                android:overScrollMode="never"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_review" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
     </ScrollView>
 

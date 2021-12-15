@@ -1,83 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_purple">
+    android:background="@color/bg_main">
 
-    <RelativeLayout
-        android:id="@+id/mainRelativeLayout"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/bg_main">
 
-        <EditText
-            android:id="@+id/searchEditText"
+        <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/rounded_corner_bg"
-            android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="8dp"
-            android:hint="Search"
-            android:maxLines="1"
-            android:inputType="text"
-            android:imeOptions="actionGo"
-            android:layout_toStartOf="@+id/change_layoutManager"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColorHint="#676767" />
+            android:layout_height="wrap_content"
+            android:background="@color/bg_main"
+            android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/filter_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignTop="@+id/searchEditText"
-            android:layout_alignBottom="@id/searchEditText"
-            android:layout_alignEnd="@+id/searchEditText"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_filter" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/bg_main"
+                app:layout_scrollFlags="scroll|enterAlways|snap">
 
-        <ImageView
-            android:id="@+id/change_layoutManager"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignTop="@+id/searchEditText"
-            android:layout_alignBottom="@id/searchEditText"
-            android:layout_alignParentEnd="true"
-            android:layout_margin="8dp"
-            android:src="@drawable/ic_listview" />
+                <EditText
+                    android:id="@+id/searchEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_toStartOf="@+id/change_layoutManager"
+                    android:background="@drawable/rounded_corner_bg"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawablePadding="8dp"
+                    android:hint="@string/search"
+                    android:imeOptions="actionGo"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColorHint="#676767" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/apartmentsRecyclerView"
-            android:layout_marginTop="8dp"
+                <ImageView
+                    android:id="@+id/filter_button"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignEnd="@+id/searchEditText"
+                    android:layout_marginTop="8dp"
+                    android:adjustViewBounds="true"
+                    android:background="@drawable/ripple_simple_circle"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_filter" />
+
+                <ImageView
+                    android:id="@+id/change_layoutManager"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignTop="@+id/searchEditText"
+                    android:layout_alignBottom="@id/searchEditText"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:src="@drawable/ic_listview" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/sortLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/change_layoutManager"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/sortBySection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/ripple_simple_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        style="@style/BoldTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:text="@string/sort_by"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/sortTV"
+                        style="@style/BoldTextStyle"
+                        android:layout_width="wrap_content"
+                        android:text="@string/default_string"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:id="@+id/sortDirection"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_downward"
+                        android:visibility="gone"
+                        app:tint="@color/text_color" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/resultsForTV"
+                    style="@style/RegularTextStyleMargins"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone"
+                    tools:text="Results for 'apartment'" />
+
+            </LinearLayout>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <RelativeLayout
+            android:id="@+id/mainRelativeLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/change_layoutManager" />
+            android:animateLayoutChanges="true"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <TextView
-            android:id="@+id/nothingFoundTV"
-            android:visibility="gone"
-            android:layout_below="@+id/change_layoutManager"
-            android:layout_width="match_parent"
-            android:paddingTop="128dp"
-            android:textColor="@color/white"
-            android:shadowDy="2"
-            android:shadowDx="2"
-            android:shadowColor="@color/black"
-            android:shadowRadius="5"
-            android:gravity="top|center_horizontal"
-            android:textSize="40sp"
-            android:text="Nothing found!"
-            android:layout_height="match_parent"/>
-    </RelativeLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/apartmentsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                tools:listitem="@layout/apartment_post_listview_item" />
+
+            <TextView
+                android:id="@+id/nothingFoundTV"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="top|center_horizontal"
+                android:paddingTop="128dp"
+                android:shadowColor="@color/black"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="5"
+                android:text="Nothing found!"
+                android:textColor="@color/white"
+                android:textSize="40sp"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:visibility="gone"
-        android:layout_gravity="center"
         android:layout_width="48dp"
-        android:layout_height="48dp"/>
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 </FrameLayout>

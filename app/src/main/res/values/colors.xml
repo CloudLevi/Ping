@@ -10,22 +10,25 @@
     <color name="black_transparent">#80000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="light_green_old">#99ffff</color>
-    <color name="light_green">#BBE7E8</color>
+    <color name="bg_main">#FFFFFF</color>
+    <color name="bg_helper">#B29CE4</color>
+    <color name="text_color">#000000</color>
+    <color name="buttonColorActive">#e69e44</color>
 
     <color name="light_purple_old">#9999ff</color>
-    <color name="light_purple">#E4F6F6</color>
-    <color name="text_color">#2D678C</color>
-    <color name="text_color_dark">#262642</color>
-
-    <color name="button_default_color">#3A3A6A</color>
 
     <color name="borderColor">#555555</color>
     <color name="buttonColorActive_Old">#E633DD</color>
-    <color name="buttonColorActive">#2D678C</color>
 
     <color name="edit_text_bg">#63676A</color>
 
+    <color name="green">#4CAF50</color>
+    <color name="orange">#FF9800</color>
+    <color name="red_error">#F44336</color>
+
     <color name="buttonColorInactive">#808080</color>
     <color name="light_gray">#CCCCCC</color>
+    <color name="gray_text">#717171</color>
+
+    <color name="unread_message">#2D88D8</color>
 </resources>

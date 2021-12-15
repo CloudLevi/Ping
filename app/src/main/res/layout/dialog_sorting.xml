@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:animateLayoutChanges="true"
+    android:background="@drawable/rounded_bg_16dp"
+    android:backgroundTint="@color/bg_main"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/titleTV"
+            style="@style/BoldTextStyle"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="@string/sort_by"
+            android:textSize="20sp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/sortOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/priceButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/price_per_day"
+                app:layout_constraintEnd_toStartOf="@+id/timeButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <RadioButton
+                android:id="@+id/timeButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/time_posted"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/priceButton"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <RadioButton
+                android:id="@+id/nameButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/name"
+                app:layout_constraintEnd_toStartOf="@+id/ratingButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/timeButton" />
+
+            <RadioButton
+                android:id="@+id/ratingButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/rating"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/nameButton"
+                app:layout_constraintTop_toBottomOf="@+id/timeButton" />
+
+            <RadioButton
+                android:id="@+id/acreageButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/acreage"
+                app:layout_constraintEnd_toStartOf="@+id/roomButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ratingButton" />
+
+            <RadioButton
+                android:id="@+id/roomButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/room_amount"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/acreageButton"
+                app:layout_constraintTop_toBottomOf="@+id/ratingButton" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/sortByError"
+            style="@style/ErrorStyle"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:text="@string/please_choose_an_option"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@+id/orderBarrier" />
+
+        <TextView
+            style="@style/BoldTextStyle"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="@string/sort_order"
+            android:textSize="20sp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/sortOrderOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/ascendingButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center"
+                android:text="@string/ascending"
+                app:layout_constraintEnd_toStartOf="@+id/descendingButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <RadioButton
+                android:id="@+id/descendingButton"
+                style="@style/RadioButtonCustom"
+                android:layout_width="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:gravity="center"
+                android:text="@string/descending"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/ascendingButton"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/orderBarrier"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="ascendingButton, descendingButton" />
+
+            <TextView
+                android:id="@+id/sortOrderError"
+                style="@style/ErrorStyle"
+                android:text="@string/please_choose_an_option"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@+id/orderBarrier" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+</ScrollView>

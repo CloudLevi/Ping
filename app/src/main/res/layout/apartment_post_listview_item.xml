@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
     android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
     android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp"
     android:background="@drawable/listview_item_background">
 
     <com.google.android.material.imageview.ShapeableImageView
@@ -38,12 +38,49 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:paddingEnd="8dp"
-            android:textColor="@color/text_color_dark"
+            android:textColor="@color/text_color"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="titletitletitletitletitletitletitletitletitletitletitletitletitletitle" />
+
+        <LinearLayout
+            android:id="@+id/priceLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/locationTextView"
+            app:layout_constraintEnd_toStartOf="@+id/apartmentType"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTextView">
+
+            <TextView
+                android:id="@+id/priceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_color"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:autoSizeMaxTextSize="22sp"
+                app:autoSizeMinTextSize="14sp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
+                tools:text="232323233232 UAH" />
+
+            <TextView
+                android:id="@+id/priceTypeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:textColor="@color/text_color"
+                android:textSize="13sp"
+                tools:text="/month" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/ratingTextView"
@@ -54,11 +91,11 @@
             android:drawablePadding="1dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/text_color_dark"
+            android:textColor="@color/text_color"
             android:textSize="13sp"
             app:drawableLeftCompat="@drawable/ic_star"
-            app:layout_constraintTop_toBottomOf="@+id/priceLayout"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/priceLayout"
             tools:text="4,7" />
 
         <TextView
@@ -69,42 +106,12 @@
             android:drawablePadding="1dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/text_color_dark"
+            android:textColor="@color/text_color"
             android:textSize="13sp"
             app:drawableLeftCompat="@drawable/ic_baseline_location_on_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             tools:text="Washington Street 1, New Orleans" />
-
-        <LinearLayout
-            android:id="@+id/priceLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@id/locationTextView"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleTextView">
-
-            <TextView
-                android:id="@+id/priceTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:layout_marginEnd="8dp"
-                android:textColor="@color/text_color_dark"
-                android:textSize="23sp"
-                android:textStyle="bold"
-                tools:text="25$" />
-
-            <TextView
-                android:id="@+id/priceTypeTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:textColor="@color/text_color_dark"
-                android:textSize="13sp"
-                tools:text="/month" />
-        </LinearLayout>
 
         <ImageView
             android:id="@+id/apartmentType"

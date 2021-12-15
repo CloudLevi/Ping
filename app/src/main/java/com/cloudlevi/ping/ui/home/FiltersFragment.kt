@@ -2,29 +2,31 @@ package com.cloudlevi.ping.ui.home
 
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.RadioGroup
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.databinding.FragmentFiltersBinding
 import com.google.android.material.slider.RangeSlider
-import com.google.android.material.slider.Slider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import com.cloudlevi.ping.ui.home.FiltersFragmentEvent.*
 
 @AndroidEntryPoint
-class FiltersFragment: Fragment(R.layout.fragment_filters), FilterListener {
+class FiltersFragment: BaseFragment<FragmentFiltersBinding>
+    (R.layout.fragment_filters, true), FilterListener {
 
     private val homeViewModel: HomeFragmentViewModel by activityViewModels()
     private val viewModel: FiltersViewModel by viewModels()
     private lateinit var binding: FragmentFiltersBinding
-    private lateinit var adapter: FilterSortAdapter
+
+    override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentFiltersBinding =
+        FragmentFiltersBinding::inflate
 
     private val radioGroupListener = RadioChangeListener()
 
@@ -45,11 +47,6 @@ class FiltersFragment: Fragment(R.layout.fragment_filters), FilterListener {
             //Set all the parameters from homeviewmodel
             getParametersFromHomeViewModel()
             setFilterValuesOnUI()
-
-            adapter = FilterSortAdapter(arrayListOf("Cheaper first", "More expensive first", "Newest first", "Higher rated first"), this@FiltersFragment, viewModel.sort_type)
-            sortRecycler.adapter = adapter
-            sortRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            sortRecycler.setHasFixedSize(true)
 
             applyButton.setOnClickListener {
 
@@ -130,6 +127,20 @@ class FiltersFragment: Fragment(R.layout.fragment_filters), FilterListener {
 
             currentMinPrice = viewModel.minPrice
             currentMaxPrice = viewModel.maxPrice
+
+            Log.d("TAG", "setParametersToHomeViewModel: " +
+                    "\ncurrentSortType $currentSortType" +
+                    "\ncurrentApt_type $currentApt_type" +
+                    "\ncurrentFurniture_type $currentFurniture_type" +
+                    "\ncurrentRent_type $currentRent_type" +
+                    "\ncurrentMinRating $currentMinRating" +
+                    "\ncurrentMaxRating $currentMaxRating" +
+                    "\ncurrentMinFloor $currentMinFloor" +
+                    "\ncurrentMaxFloor $currentMaxFloor" +
+                    "\ncurrentMinRooms $currentMinRooms" +
+                    "\ncurrentMaxRooms $currentMaxRooms" +
+                    "\ncurrentMinPrice $currentMinPrice" +
+                    "\ncurrentMaxPrice $currentMaxPrice")
         }
     }
     private fun getParametersFromHomeViewModel(){
@@ -149,12 +160,23 @@ class FiltersFragment: Fragment(R.layout.fragment_filters), FilterListener {
 
             viewModel.minPrice = homeViewModel.currentMinPrice
             viewModel.maxPrice = homeViewModel.currentMaxPrice
+
+        Log.d("TAG", "getParametersFromHomeViewModel: " +
+                "\ncurrentSortType ${viewModel.sort_type}" +
+                "\ncurrentApt_type ${viewModel.apt_type}" +
+                "\ncurrentFurniture_type ${viewModel.furniture_type}" +
+                "\ncurrentRent_type ${viewModel.rent_type}" +
+                "\ncurrentMinRating ${viewModel.minRating}" +
+                "\ncurrentMaxRating ${viewModel.maxRating}" +
+                "\ncurrentMinFloor ${viewModel.minFloor}" +
+                "\ncurrentMaxFloor ${viewModel.maxFloor}" +
+                "\ncurrentMinRooms ${viewModel.minRooms}" +
+                "\ncurrentMaxRooms ${viewModel.maxRooms}" +
+                "\ncurrentMinPrice ${viewModel.minPrice}" +
+                "\ncurrentMaxPrice ${viewModel.maxPrice}")
     }
     private fun setFilterValuesOnUI(){
         binding.apply{
-
-            adapter = FilterSortAdapter(arrayListOf("Cheaper first", "More expensive first", "Newest first", "Higher rated first"), this@FiltersFragment, viewModel.sort_type)
-            adapter.notifyDataSetChanged()
 
             when(viewModel.apt_type){
                 APT_TYPE_ALL -> aptTypeAll.isChecked = true
@@ -191,10 +213,15 @@ class FiltersFragment: Fragment(R.layout.fragment_filters), FilterListener {
     }
     private fun setSliderValues(){
         binding.apply {
-            ratingRangeSlider.setValues(viewModel.minRating, viewModel.maxRating)
-            floorRangeSlider.setValues(viewModel.minFloor, viewModel.maxFloor)
-            roomRangeSlider.setValues(viewModel.minRooms, viewModel.maxRooms)
-            priceRangeSlider.setValues(viewModel.minPrice, viewModel.maxPrice)
+            val ratings = viewModel.getRatings(ratingRangeSlider.valueFrom, ratingRangeSlider.valueTo)
+            val floors = viewModel.getFloors(floorRangeSlider.valueFrom, floorRangeSlider.valueTo)
+            val rooms = viewModel.getRooms(roomRangeSlider.valueFrom, roomRangeSlider.valueTo)
+            val prices = viewModel.getPrice(priceRangeSlider.valueFrom, priceRangeSlider.valueTo)
+
+            ratingRangeSlider.setValues(ratings.first, ratings.second)
+            floorRangeSlider.setValues(floors.first, floors.second)
+            roomRangeSlider.setValues(rooms.first, rooms.second)
+            priceRangeSlider.setValues(prices.first, prices.second)
         }
     }
 

@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "407708783580",
+    "firebase_url": "https://pingapp-8383c-default-rtdb.firebaseio.com",
     "project_id": "pingapp-8383c",
     "storage_bucket": "pingapp-8383c.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "407708783580-6ejtcck8e8rsi9oa4flvnh9t7no2p4r5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cloudlevi.ping",
+            "certificate_hash": "8bbd7f41fef2e766d8361254f1bc2da3fdf54c34"
+          }
+        },
         {
           "client_id": "407708783580-1trovfueeo34bmp53f6n4025uv9dd9er.apps.googleusercontent.com",
           "client_type": 3
@@ -27,7 +36,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "407708783580-1trovfueeo34bmp53f6n4025uv9dd9er.apps.googleusercontent.com",
+              "client_id": "407708783580-04omnltaol5r08njns2pv6vir5bqjs44.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

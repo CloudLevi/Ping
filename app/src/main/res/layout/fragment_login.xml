@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_purple"
+    android:background="@color/bg_main"
     tools:context=".ui.login.LoginFragment">
 
     <RelativeLayout
@@ -56,7 +56,7 @@
                 android:layout_height="50dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/light_green"
+                app:cardBackgroundColor="@color/bg_helper"
                 app:cardCornerRadius="25dp">
 
                 <RelativeLayout

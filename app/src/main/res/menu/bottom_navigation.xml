@@ -4,14 +4,18 @@
     <item
         android:id="@+id/homeFragment"
         android:icon="@drawable/ic_home_24"
-        android:title="Home"/>
+        android:title="@string/home"/>
     <item
         android:id="@+id/addPostFragment"
         android:icon="@drawable/add_circle_outline"
-        android:title="Add"/>
+        android:title="@string/add"/>
+    <item
+        android:id="@+id/chatsFragment"
+        android:icon="@drawable/ic_chat"
+        android:title="@string/chats"/>
     <item
         android:id="@+id/myProfileFragment"
         android:icon="@drawable/ic_account_24"
-        android:title="My profile"/>
+        android:title="@string/my_profile"/>
 
 </menu>

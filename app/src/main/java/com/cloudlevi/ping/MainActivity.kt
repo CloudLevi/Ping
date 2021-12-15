@@ -18,6 +18,19 @@ import com.cloudlevi.ping.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
+import java.util.*
+import android.os.Build
+import androidx.fragment.app.activityViewModels
+import android.annotation.TargetApi
+import android.content.SharedPreferences
+import androidx.lifecycle.ViewModelProvider
+import java.lang.RuntimeException
+import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -25,6 +38,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private val viewModelMainActivity: MainActivityViewModel by viewModels()
+
+    @Inject
+    lateinit var dataStoreManager: PreferencesManager
+
+    private var sharedPrefs: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,22 +52,67 @@ class MainActivity : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
 
-        if (firebaseAuth.currentUser != null){
+        if (firebaseAuth.currentUser != null) {
             val currentUser = firebaseAuth.currentUser!!
-            viewModelMainActivity.setUserData(currentUser.uid,
-                currentUser.email?: "",
-                currentUser.displayName?: "")
+            viewModelMainActivity.setUserData(
+                currentUser.uid,
+                currentUser.email ?: "",
+                currentUser.displayName ?: ""
+            )
             setupViews(true)
 
 
         } else setupViews(false)
     }
 
+    override fun attachBaseContext(base: Context) {
+        sharedPrefs = base.getSharedPreferences("prefs", 0)
+        super.attachBaseContext(updateBaseContextLocale(base))
+    }
+
+    private fun updateBaseContextLocale(context: Context): Context? {
+        val language = sharedPrefs?.getString("language_code", "en") ?: "en"
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        return if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            updateResourcesLocale(context, locale)
+        } else updateResourcesLocaleLegacy(context, locale)
+    }
+
+    @TargetApi(Build.VERSION_CODES.N_MR1)
+    private fun updateResourcesLocale(context: Context, locale: Locale): Context? {
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(locale)
+        return context.createConfigurationContext(configuration)
+    }
+
+    private fun updateResourcesLocaleLegacy(context: Context, locale: Locale): Context? {
+        val resources = context.resources
+        val configuration = resources.configuration
+        configuration.locale = locale
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+        return context
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setUserOnline(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        setUserOnline(false)
+    }
+
+    fun setUserOnline(isOnline: Boolean) {
+        viewModelMainActivity.setUserOnline(isOnline)
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    private fun setupViews(loggedIn: Boolean){
+    private fun setupViews(loggedIn: Boolean) {
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -57,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
         val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
 
-        when(loggedIn){
+        when (loggedIn) {
             true -> navGraph.startDestination = R.id.homeFragment
             false -> navGraph.startDestination = R.id.loginFragment
         }
@@ -67,14 +130,45 @@ class MainActivity : AppCompatActivity() {
         NavigationUI.setupWithNavController(binding.bottomMenu, navController)
         //setupActionBarWithNavController(navController)
 
-        navController.addOnDestinationChangedListener { controller, destination, arguments ->
-            when(destination.id){
-                R.id.loginFragment -> binding.bottomMenu.visibility = View.GONE
-                R.id.registerFragment -> binding.bottomMenu.visibility = View.GONE
-                R.id.homeFragment -> binding.bottomMenu.visibility = View.VISIBLE
-            }
-        }
+//        navController.addOnDestinationChangedListener { controller, destination, arguments ->
+//            when (destination.id) {
+//                R.id.loginFragment -> hideNavigation()
+//                R.id.registerFragment -> hideNavigation()
+//                R.id.userChatFragment -> hideNavigation()
+//                else -> showNavigation()
+//            }
+//        }
 
+    }
+
+    fun hideNavigation() {
+        binding.bottomMenu.visibility = View.GONE
+    }
+
+    fun showNavigation() {
+        binding.bottomMenu.visibility = View.VISIBLE
+    }
+
+    fun switchLoading(isLoading: Boolean) {
+        binding.progressLayout.visibility = if (isLoading) View.VISIBLE
+        else View.GONE
+    }
+
+    fun setLocale(languageCode: String?) {
+        sharedPrefs?.edit()?.putString("language_code", languageCode)?.commit()
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val resources: Resources = resources
+        val config: Configuration = resources.configuration
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
+        invalidateBottomBar()
+    }
+
+    private fun invalidateBottomBar(){
+        binding.bottomMenu.menu.clear()
+        binding.bottomMenu.inflateMenu(R.menu.bottom_navigation)
+        NavigationUI.setupWithNavController(binding.bottomMenu, navController)
     }
 }
 

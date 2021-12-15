@@ -3,15 +3,21 @@ package com.cloudlevi.ping.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import com.cloudlevi.ping.EXCHANGE_URL
+import com.cloudlevi.ping.PingApplication
+import com.cloudlevi.ping.api.ExchangeApiService
 import com.cloudlevi.ping.data.PreferencesManager
 import com.cloudlevi.ping.db.PingDatabase
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.prefs.Preferences
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -41,6 +47,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideApplicationScope() = CoroutineScope(SupervisorJob())
+
+    @Provides
+    @Singleton
+    fun provideExchangeAPI(): ExchangeApiService {
+        val retrofit = Retrofit
+            .Builder()
+            .baseUrl(EXCHANGE_URL)
+            .addConverterFactory(GsonConverterFactory.create()).build()
+        return retrofit.create(ExchangeApiService::class.java)
+    }
 
 @Retention(AnnotationRetention.RUNTIME)
 @Qualifier

@@ -1,5 +1,6 @@
 package com.cloudlevi.ping.ui.apartmentPage
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -16,11 +17,11 @@ class ApartmentPageSliderItem: Fragment(R.layout.apartment_page_slider_item) {
         const val BUNDLE_POSITION = "position"
         const val BUNDLE_IMAGE_URL= "image_url"
 
-        fun getInstance(position: Int, imageUrl: String): Fragment {
+        fun getInstance(position: Int, imageUrl: Uri): Fragment {
             val apartmentPageSliderItem = ApartmentPageSliderItem()
             val bundle = Bundle()
             bundle.putInt(BUNDLE_POSITION, position)
-            bundle.putString(BUNDLE_IMAGE_URL, imageUrl)
+            bundle.putString(BUNDLE_IMAGE_URL, imageUrl.toString())
             apartmentPageSliderItem.arguments = bundle
 
             return apartmentPageSliderItem
