@@ -3,8 +3,10 @@ package com.cloudlevi.ping.ui.addPost
 import android.content.ContentValues.TAG
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,25 +15,28 @@ import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.AddImageModel
+import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.databinding.FragmentAddPostBinding
+import com.cloudlevi.ping.ext.*
 import com.cloudlevi.ping.ui.addPost.AddPostFragmentEvent.*
 import com.cloudlevi.ping.ui.addPost.AddPostFragmentViewModel.*
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import java.io.ByteArrayOutputStream
-
+import java.util.*
+import com.cloudlevi.ping.ui.addPost.AddPostFragmentViewModel.AddPostEvent.*
+import com.cloudlevi.ping.ui.addPost.AddPostFragmentViewModel.AddPostAction.*
 
 @AndroidEntryPoint
 class AddPostFragment :
@@ -43,9 +48,18 @@ class AddPostFragment :
     private lateinit var imageResultLauncher: ActivityResultLauncher<String>
     private lateinit var addImageAdapter: AddImageAdapter
     private lateinit var byteArrayData: ByteArray
+    private lateinit var geocoder: Geocoder
 
     override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentAddPostBinding =
         FragmentAddPostBinding::inflate
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        binding.fragmentAddPostScrollView.post {
+            binding.fragmentAddPostScrollView.scrollTo(0, viewModel.scrollPositionY)
+        }
+        populateFromViewModel()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,11 +69,12 @@ class AddPostFragment :
         super.onCreateView(inflater, container, savedInstanceState)
 
         binding = FragmentAddPostBinding.inflate(inflater, container, false)
+        geocoder = Geocoder(requireContext(), Locale.getDefault())
 
+        viewModel.init()
         viewModel.action.observe(viewLifecycleOwner) {
-            when (it.actionType) {
-                AddPostAction.ADAPTER_CHANGED -> addImageAdapter.update()
-            }
+            val data = it.getDataSafely() ?: return@observe
+            doAction(data)
         }
 
         return binding.root
@@ -69,13 +84,6 @@ class AddPostFragment :
         super.onViewCreated(view, savedInstanceState)
 
         addImageAdapter = AddImageAdapter(this, viewModel)
-
-        binding.fragmentAddPostScrollView.post {
-            binding.fragmentAddPostScrollView.scrollTo(0, viewModel.scrollPositionY)
-        }
-
-        switchAptTypeColors(viewModel.aptTypeValue)
-        switchPriceTypeColors(viewModel.priceType)
 
         imageResultLauncher =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -102,65 +110,76 @@ class AddPostFragment :
 
         binding.apply {
 
+            childFragmentManager.setFragmentResultListener(
+                MapDialogFragment.APPLY,
+                this@AddPostFragment
+            ) { _, bundle ->
+                val latLng = bundle.get(MapDialogFragment.LAT_LONG) as? LatLng
+                    ?: return@setFragmentResultListener
+                viewModel.latLng = latLng
+                viewModel.countryCode = latLng.countryCode(gCoder = geocoder)
+
+                locationTV.text = latLng.getAddress(gCoder = geocoder)
+                locationError.makeGone()
+            }
+
             titleEditText.apply {
                 addTextChangedListener {
                     viewModel.title = it.toString().trim()
                     val characterCount = "${it?.length ?: 0}/70"
                     titleCharacterCount.text = characterCount
+                    titleError.makeGone()
                 }
-                setText(viewModel.title)
+            }
+
+            fragmentAddPostScrollView.setOnScrollChangeListener { view, x, y, i3, i4 ->
+                viewModel.scrollPositionY = y
             }
 
             floorCustomPicker.apply {
                 buttonMinus.setOnClickListener {
                     viewModel.pickerButtonClicked(CLICK_TYPE_MINUS, PICKER_TYPE_FLOOR)
+                    floorError.makeGone()
                 }
                 buttonPlus.setOnClickListener {
                     viewModel.pickerButtonClicked(CLICK_TYPE_PLUS, PICKER_TYPE_FLOOR)
+                    floorError.makeGone()
                 }
-                amountTV.text = viewModel.floorValue.toString()
             }
             roomCustomPicker.apply {
                 buttonMinus.setOnClickListener {
                     viewModel.pickerButtonClicked(CLICK_TYPE_MINUS, PICKER_TYPE_ROOMS)
+                    roomError.makeGone()
                 }
                 buttonPlus.setOnClickListener {
                     viewModel.pickerButtonClicked(CLICK_TYPE_PLUS, PICKER_TYPE_ROOMS)
+                    roomError.makeGone()
                 }
-                amountTV.text = viewModel.roomAmount.toString()
             }
 
-            acreageEditText.setText(checkIfDoubleIsZero(viewModel.acreage))
             acreageEditText.addTextChangedListener {
-                if (it.toString().trim().isNotEmpty()) {
-                    viewModel.acreage = it.toString().toDouble()
+                val string = it.toString().trimDigits()
+                if (string.isNotEmpty()) {
+                    viewModel.acreage = string.toDouble()
                 } else {
                     viewModel.acreage = 0.0
                 }
+                acreageError.makeGone()
             }
-
-            cityEditText.setText(viewModel.city)
-            cityEditText.addTextChangedListener {
-                viewModel.city = it.toString().trim()
-            }
-
-            addressEditText.addTextChangedListener {
-                viewModel.address = it.toString().trim()
-            }
-            addressEditText.setText(viewModel.address)
 
             descriptionEditText.addTextChangedListener {
                 viewModel.description = it.toString().trim()
+                descriptionError.makeGone()
             }
-            descriptionEditText.setText(viewModel.description)
 
-            priceEditText.setText(checkIfIntIsZero(viewModel.price))
             priceEditText.addTextChangedListener {
-                if (it.toString().trim().isNotEmpty()) {
-                    viewModel.price = it.toString().toInt()
+                val string = it.toString().trimDigitsInt()
+                if (string.isNotEmpty()) {
+                    viewModel.price = string.toInt()
                 } else {
                     viewModel.price = 0
                 }
+                priceError.makeGone()
             }
 
             aptTypeChoiceFlatButton.setOnClickListener {
@@ -186,14 +205,8 @@ class AddPostFragment :
                 viewModel.onUploadButtonClicked()
             }
 
-            if (!viewModel.isImagesArrayInitialized) {
-                viewModel.imagesArray.clear()
-                for (a in 0..4) {
-                    viewModel.imagesArray.add(AddImageModel(a))
-                }
-                viewModel.isImagesArrayInitialized = true
-            } else {
-                viewModel.insertPreviousImages()
+            locationLayout.setOnClickListener {
+                onSelectLocationClick()
             }
 
             imagesAddRecyclerView.apply {
@@ -204,11 +217,10 @@ class AddPostFragment :
             }
 
             viewModel.progressTextLiveData.observe(viewLifecycleOwner) {
-                progressTV.text = it
+                changeLoadingText(it)
             }
 
             addImageAdapter.update()
-
         }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
@@ -231,6 +243,66 @@ class AddPostFragment :
                 }
             }
         }
+    }
+
+    private fun onSelectLocationClick() {
+        val dialog = MapDialogFragment.createFragment(viewModel.latLng)
+        dialog.show(childFragmentManager, MapDialogFragment.DIALOG_TAG)
+    }
+
+    private fun doAction(e: AddPostEvent) {
+        binding.apply {
+            when (e.actionType) {
+                ADAPTER_CHANGED -> {
+                    if (viewModel.getAmountOfFilledImages() > 0) imagesError.makeGone()
+                    addImageAdapter.update()
+                }
+                TITLE_ERROR -> titleError.visibleOrGone(e.bool ?: false)
+                ROOM_ERROR -> roomError.visibleOrGone(e.bool ?: false)
+                ACREAGE_ERROR -> acreageError.visibleOrGone(e.bool ?: false)
+                LAT_LNG_ERROR -> locationError.visibleOrGone(e.bool ?: false)
+                DESCRIPTION_ERROR -> descriptionError.visibleOrGone(e.bool ?: false)
+                PRICE_ERROR -> priceError.visibleOrGone(e.bool ?: false)
+                FLOOR_ERROR -> floorError.visibleOrGone(e.bool ?: false)
+                IMAGES_ERROR -> imagesError.visibleOrGone(e.bool ?: false)
+                NAVIGATE_TO_POST -> navigateToPost(e.homePost)
+                POPULATE_FIELDS -> populateFromViewModel()
+                NETWORK_ERROR -> sendLongToast(R.string.network_error_message)
+                else -> {}
+            }
+        }
+    }
+
+    private fun populateFromViewModel() {
+        switchAptTypeColors(viewModel.aptTypeValue)
+        switchPriceTypeColors(viewModel.priceType)
+
+        binding.apply {
+            titleEditText.setText(viewModel.title)
+            floorCustomPicker.amountTV.text = viewModel.floorValue.toString()
+            roomCustomPicker.amountTV.text = viewModel.roomAmount.toString()
+            if (viewModel.latLng != null)
+                locationTV.text = viewModel.latLng?.getAddress(gCoder = geocoder)
+            acreageEditText.setText(checkIfDoubleIsZero(viewModel.acreage))
+            descriptionEditText.setText(viewModel.description)
+            priceEditText.setText(checkIfIntIsZero(viewModel.price))
+            if (!viewModel.isImagesArrayInitialized) {
+                viewModel.imagesArray.clear()
+                for (a in 0..4) {
+                    viewModel.imagesArray.add(AddImageModel(a))
+                }
+                viewModel.isImagesArrayInitialized = true
+            } else {
+                viewModel.insertPreviousImages()
+            }
+            addImageAdapter.update()
+        }
+    }
+
+    private fun navigateToPost(post: ApartmentHomePost?) {
+        post ?: return
+        val action = AddPostFragmentDirections.addPostToApartmentPage(post)
+        findNavController().navigate(action)
     }
 
     private fun switchAptTypeColors(aptType: Int) {
@@ -333,51 +405,9 @@ class AddPostFragment :
     }
 
     private fun changeProgressStatus(status: Int) {
-        binding.addFragmentProgressBar.visibility = status
-        binding.progressTV.visibility = status
-        var childStatus = false;
-        when (status) {
-            View.VISIBLE -> {
-                binding.mainRelativeLayout.foreground =
-                    ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
-                childStatus = false
-            }
-            View.GONE -> {
-                binding.mainRelativeLayout.foreground = null
-                childStatus = true
-            }
-        }
-
-        changeAllViewsClickability(childStatus)
-    }
-
-
-    private fun changeAllViewsClickability(status: Boolean) {
-        binding.apply {
-            for (childView in mainRelativeLayout.children) {
-                when (childView) {
-                    is LinearLayout -> changeViewGroupClickability(childView, status)
-                    is FrameLayout -> changeViewGroupClickability(childView, status)
-                    is Button -> childView.isEnabled = status
-                }
-                viewModel.switchRecyclerViewChildrenStatus(status)
-
-                titleLayout.isEnabled = status
-                acreageLayout.isEnabled = status
-                cityLayout.isEnabled = status
-                addressLayout.isEnabled = status
-                descriptionLayout.isEnabled = status
-                priceInputLayout.isEnabled = status
-            }
-        }
-    }
-
-    private fun changeViewGroupClickability(parent: ViewGroup, status: Boolean) {
-        binding.apply {
-            for (childView in parent.children) {
-                childView.isEnabled = status
-            }
-        }
+        val isLoading = status == View.VISIBLE
+        switchLoading(isLoading)
+        toggleAllViewsEnabled(!isLoading, binding.fragmentAddPostScrollView)
     }
 
     private fun checkIfDoubleIsZero(value: Double): String {
@@ -401,11 +431,6 @@ class AddPostFragment :
 
     override fun onRemoveButtonClicked(addImageModel: AddImageModel) {
         viewModel.onImageRemoveButtonClicked(addImageModel)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewModel.scrollPositionY = binding.fragmentAddPostScrollView.scrollY
     }
 
 }

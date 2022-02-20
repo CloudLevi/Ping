@@ -71,15 +71,16 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
-        android:overScrollMode="never"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:overScrollMode="never"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/bg_main">
+            android:background="@color/bg_main"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/aptTypeTV"
@@ -103,9 +104,20 @@
                 app:layout_constraintTop_toBottomOf="@+id/aptTypeTV">
 
                 <RadioButton
+                    android:id="@+id/aptTypeAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/both"
+                    android:textColor="@color/text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <RadioButton
                     android:id="@+id/aptTypeFlat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
                     android:text="@string/flat"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
@@ -117,17 +129,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:text="@string/house"
-                    android:textColor="@color/text_color"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <RadioButton
-                    android:id="@+id/aptTypeAll"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:checked="true"
-                    android:text="@string/both"
                     android:textColor="@color/text_color"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -271,10 +272,9 @@
 
             <com.google.android.material.slider.RangeSlider
                 android:id="@+id/ratingRangeSlider"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:stepSize="0.5"
                 android:valueFrom="0.0"
                 android:valueTo="5.0"
@@ -296,10 +296,9 @@
 
             <com.google.android.material.slider.RangeSlider
                 android:id="@+id/floorRangeSlider"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:stepSize="1"
                 android:valueFrom="0"
                 android:valueTo="5"
@@ -321,10 +320,9 @@
 
             <com.google.android.material.slider.RangeSlider
                 android:id="@+id/roomRangeSlider"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:stepSize="1"
                 android:valueFrom="0"
                 android:valueTo="5"
@@ -346,10 +344,9 @@
 
             <com.google.android.material.slider.RangeSlider
                 android:id="@+id/priceRangeSlider"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:stepSize="1"
                 android:valueFrom="0"
                 android:valueTo="5"
@@ -361,13 +358,14 @@
                 android:id="@+id/applyButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginTop="16dp"
                 android:text="@string/apply_filters"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/priceRangeSlider" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 

@@ -59,30 +59,20 @@
                 android:hint="@string/repeat_password_hint"
                 android:inputType="textPassword" />
 
-            <androidx.cardview.widget.CardView
+            <TextView
                 android:id="@+id/registerButton"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-                app:cardBackgroundColor="@color/bg_helper"
-                app:cardCornerRadius="25dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:text="@string/register"
-                        android:textColor="#000000"
-                        android:textSize="18sp" />
-
-                </RelativeLayout>
-
-            </androidx.cardview.widget.CardView>
+                android:background="@drawable/ripple_bg_color_24dp"
+                android:backgroundTint="@color/bg_helper"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/register"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/signInTextView"
@@ -90,9 +80,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
+                android:background="@drawable/ripple_simple_bg"
                 android:gravity="center_horizontal"
-                android:textColor="@color/text_color"
+                android:padding="8dp"
                 android:text="@string/already_have_an_account"
+                android:textColor="@color/text_color"
                 android:textSize="18sp" />
 
         </LinearLayout>

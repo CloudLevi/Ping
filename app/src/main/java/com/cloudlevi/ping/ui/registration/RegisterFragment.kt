@@ -7,20 +7,22 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cloudlevi.ping.*
-import com.cloudlevi.ping.databinding.FragmentMyProfileBinding
 import com.cloudlevi.ping.databinding.FragmentRegisterBinding
 import com.cloudlevi.ping.ui.registration.RegisterFragmentDirections.actionRegisterFragmentToLoginFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import com.cloudlevi.ping.ui.registration.RegisterFragmentEvent.*
+import android.text.InputFilter
+import com.cloudlevi.ping.ext.blockSpaces
+import com.cloudlevi.ping.ui.registration.RegisterFragmentDirections.actionRegisterFragmentToHomeFragment
+
 
 @AndroidEntryPoint
-class RegisterFragment:
+class RegisterFragment :
     BaseFragment<FragmentRegisterBinding>
         (R.layout.fragment_register, false) {
 
@@ -34,6 +36,8 @@ class RegisterFragment:
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentRegisterBinding.bind(view)
+
+        setUserNameFilter()
 
         binding.apply {
             registerUserName.addTextChangedListener {
@@ -58,19 +62,23 @@ class RegisterFragment:
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.registerFragmentEvent.collect { event ->
-                when (event){
+                when (event) {
                     is SendToastMessage -> {
                         Toast.makeText(requireContext(), event.message, Toast.LENGTH_LONG).show()
                     }
-                    is NavigateToLoginScreen -> {
-                        navigateToLoginScreen()
+                    is NavigateToHomeScreen -> {
+                        navigateToHomeScreen()
                     }
                     is RequestErrorField -> {
                         binding.apply {
-                            if(event.request_id == REQUEST_ERROR_EMAIL_FIELD) registerEmail.error = "Error"
-                            if(event.request_id == REQUEST_ERROR_PASSWORD_FIELD) registerPassword.error = "Error"
-                            if(event.request_id == REQUEST_ERROR_CONFIRM_PASSWORD_FIELD) registerConfirmPassword.error = "Error"
-                            if(event.request_id == REQUEST_ERROR_USERNAME_FIELD) registerUserName.error = "Error"
+                            if (event.request_id == REQUEST_ERROR_EMAIL_FIELD) registerEmail.error =
+                                "Error"
+                            if (event.request_id == REQUEST_ERROR_PASSWORD_FIELD) registerPassword.error =
+                                "Error"
+                            if (event.request_id == REQUEST_ERROR_CONFIRM_PASSWORD_FIELD) registerConfirmPassword.error =
+                                "Error"
+                            if (event.request_id == REQUEST_ERROR_USERNAME_FIELD) registerUserName.error =
+                                "Error"
 
                         }
                     }
@@ -80,15 +88,30 @@ class RegisterFragment:
         }
     }
 
-    private fun navigateToLoginScreen(){
+    private fun setUserNameFilter() {
+        val filter = InputFilter { text, start, end, dest, dstart, dend ->
+            text.trim()
+        }
+//        binding.registerUserName.filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
+//            source.toString().filterNot { it.isWhitespace() }
+//        })
+        binding.registerUserName.blockSpaces()
+        //binding.registerUserName.filters = arrayOf(filter)
+    }
+
+    private fun navigateToLoginScreen() {
         findNavController().navigate(actionRegisterFragmentToLoginFragment())
     }
 
-    private fun changeProgress(status: Int){
+    private fun navigateToHomeScreen() {
+        findNavController().navigate(actionRegisterFragmentToHomeFragment())
+    }
+
+    private fun changeProgress(status: Int) {
         binding.apply {
             progressBar.visibility = status
 
-            when(status){
+            when (status) {
                 View.VISIBLE -> {
                     registerUserName.isEnabled = false
                     registerEmail.isEnabled = false
@@ -96,7 +119,8 @@ class RegisterFragment:
                     registerConfirmPassword.isEnabled = false
                     registerButton.isEnabled = false
                     signInTextView.isEnabled = false
-                    mainRelativeLayout.foreground = ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
+                    mainRelativeLayout.foreground =
+                        ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
                 }
                 View.GONE -> {
                     registerUserName.isEnabled = true

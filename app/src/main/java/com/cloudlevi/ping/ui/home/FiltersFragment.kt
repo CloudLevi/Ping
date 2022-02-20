@@ -8,20 +8,19 @@ import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.databinding.FragmentFiltersBinding
+import com.cloudlevi.ping.ext.makeGone
+import com.cloudlevi.ping.ext.makeVisible
 import com.google.android.material.slider.RangeSlider
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
-import com.cloudlevi.ping.ui.home.FiltersFragmentEvent.*
 
 @AndroidEntryPoint
-class FiltersFragment: BaseFragment<FragmentFiltersBinding>
+class FiltersFragment : BaseFragment<FragmentFiltersBinding>
     (R.layout.fragment_filters, true), FilterListener {
 
-    private val homeViewModel: HomeFragmentViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private val viewModel: FiltersViewModel by viewModels()
     private lateinit var binding: FragmentFiltersBinding
 
@@ -30,19 +29,56 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
 
     private val radioGroupListener = RadioChangeListener()
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        super.onCreateView(inflater, container, savedInstanceState)
+        binding = FragmentFiltersBinding.inflate(inflater, container, false)
+
+        viewModel.action.observe(viewLifecycleOwner) {
+            val data = it.getDataSafely() ?: return@observe
+            doAction(data)
+        }
+
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding = FragmentFiltersBinding.bind(view)
-
-        binding.apply{
+        binding.apply {
 
             setSliderValues()
 
             //Set max values for sliders
-            floorRangeSlider.valueTo = homeViewModel.totalMaxFloor
-            roomRangeSlider.valueTo = homeViewModel.totalMaxRooms
-            priceRangeSlider.valueTo = homeViewModel.totalMaxPrice
+            if (homeViewModel.totalMaxFloor == 0f) {
+                floorRangeTV.makeGone()
+                floorRangeSlider.makeGone()
+            } else {
+                floorRangeTV.makeVisible()
+                floorRangeSlider.makeVisible()
+                floorRangeSlider.valueTo = homeViewModel.totalMaxFloor
+            }
+
+            if (homeViewModel.totalMaxRooms == 0f) {
+                roomsRangeTV.makeGone()
+                roomRangeSlider.makeGone()
+            } else {
+                roomsRangeTV.makeVisible()
+                roomRangeSlider.makeVisible()
+                roomRangeSlider.valueTo = homeViewModel.totalMaxRooms
+            }
+
+            if (homeViewModel.totalMaxPrice == 0f) {
+                priceRangeTV.makeGone()
+                priceRangeSlider.makeGone()
+            } else {
+                priceRangeTV.makeVisible()
+                priceRangeSlider.makeVisible()
+                priceRangeSlider.valueTo = homeViewModel.totalMaxPrice
+            }
 
             //Set all the parameters from homeviewmodel
             getParametersFromHomeViewModel()
@@ -62,7 +98,7 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
 
             rentAll.setOnCheckedChangeListener { compoundButton, isChecked ->
                 viewModel.checkedChanged(PRICE_TYPE_ALL)
-                if (isChecked){
+                if (isChecked) {
                     rentDaily.isChecked = false
                     rentWeekly.isChecked = false
                     rentMonthly.isChecked = false
@@ -98,18 +134,10 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
                 }
             }
         }
-
-        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
-            viewModel.filtersFragmentEvent.collect { event ->
-                when(event){
-                    UpdateUI -> setFilterValuesOnUI()
-                }
-            }
-        }
     }
 
 
-    private fun setParametersToHomeViewModel(){
+    private fun setParametersToHomeViewModel() {
         homeViewModel.apply {
             currentSortType = viewModel.sort_type
             currentApt_type = viewModel.apt_type
@@ -128,70 +156,76 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
             currentMinPrice = viewModel.minPrice
             currentMaxPrice = viewModel.maxPrice
 
-            Log.d("TAG", "setParametersToHomeViewModel: " +
-                    "\ncurrentSortType $currentSortType" +
-                    "\ncurrentApt_type $currentApt_type" +
-                    "\ncurrentFurniture_type $currentFurniture_type" +
-                    "\ncurrentRent_type $currentRent_type" +
-                    "\ncurrentMinRating $currentMinRating" +
-                    "\ncurrentMaxRating $currentMaxRating" +
-                    "\ncurrentMinFloor $currentMinFloor" +
-                    "\ncurrentMaxFloor $currentMaxFloor" +
-                    "\ncurrentMinRooms $currentMinRooms" +
-                    "\ncurrentMaxRooms $currentMaxRooms" +
-                    "\ncurrentMinPrice $currentMinPrice" +
-                    "\ncurrentMaxPrice $currentMaxPrice")
+            Log.d(
+                "TAG", "setParametersToHomeViewModel: " +
+                        "\ncurrentSortType $currentSortType" +
+                        "\ncurrentApt_type $currentApt_type" +
+                        "\ncurrentFurniture_type $currentFurniture_type" +
+                        "\ncurrentRent_type $currentRent_type" +
+                        "\ncurrentMinRating $currentMinRating" +
+                        "\ncurrentMaxRating $currentMaxRating" +
+                        "\ncurrentMinFloor $currentMinFloor" +
+                        "\ncurrentMaxFloor $currentMaxFloor" +
+                        "\ncurrentMinRooms $currentMinRooms" +
+                        "\ncurrentMaxRooms $currentMaxRooms" +
+                        "\ncurrentMinPrice $currentMinPrice" +
+                        "\ncurrentMaxPrice $currentMaxPrice"
+            )
         }
     }
-    private fun getParametersFromHomeViewModel(){
-            viewModel.apt_type = homeViewModel.currentApt_type
-            viewModel.furniture_type = homeViewModel.currentFurniture_type
-            viewModel.rent_type = homeViewModel.currentRent_type
-            viewModel.sort_type = homeViewModel.currentSortType
 
-            viewModel.minRating = homeViewModel.currentMinRating
-            viewModel.maxRating = homeViewModel.currentMaxRating
+    private fun getParametersFromHomeViewModel() {
+        viewModel.apt_type = homeViewModel.currentApt_type
+        viewModel.furniture_type = homeViewModel.currentFurniture_type
+        viewModel.rent_type = homeViewModel.currentRent_type
+        viewModel.sort_type = homeViewModel.currentSortType
 
-            viewModel.minFloor = homeViewModel.currentMinFloor
-            viewModel.maxFloor = homeViewModel.currentMaxFloor
+        viewModel.minRating = homeViewModel.currentMinRating
+        viewModel.maxRating = homeViewModel.currentMaxRating
 
-            viewModel.minRooms = homeViewModel.currentMinRooms
-            viewModel.maxRooms = homeViewModel.currentMaxRooms
+        viewModel.minFloor = homeViewModel.currentMinFloor
+        viewModel.maxFloor = homeViewModel.currentMaxFloor
 
-            viewModel.minPrice = homeViewModel.currentMinPrice
-            viewModel.maxPrice = homeViewModel.currentMaxPrice
+        viewModel.minRooms = homeViewModel.currentMinRooms
+        viewModel.maxRooms = homeViewModel.currentMaxRooms
 
-        Log.d("TAG", "getParametersFromHomeViewModel: " +
-                "\ncurrentSortType ${viewModel.sort_type}" +
-                "\ncurrentApt_type ${viewModel.apt_type}" +
-                "\ncurrentFurniture_type ${viewModel.furniture_type}" +
-                "\ncurrentRent_type ${viewModel.rent_type}" +
-                "\ncurrentMinRating ${viewModel.minRating}" +
-                "\ncurrentMaxRating ${viewModel.maxRating}" +
-                "\ncurrentMinFloor ${viewModel.minFloor}" +
-                "\ncurrentMaxFloor ${viewModel.maxFloor}" +
-                "\ncurrentMinRooms ${viewModel.minRooms}" +
-                "\ncurrentMaxRooms ${viewModel.maxRooms}" +
-                "\ncurrentMinPrice ${viewModel.minPrice}" +
-                "\ncurrentMaxPrice ${viewModel.maxPrice}")
+        viewModel.minPrice = homeViewModel.currentMinPrice
+        viewModel.maxPrice = homeViewModel.currentMaxPrice
+
+        Log.d(
+            "TAG", "getParametersFromHomeViewModel: " +
+                    "\ncurrentSortType ${viewModel.sort_type}" +
+                    "\ncurrentApt_type ${viewModel.apt_type}" +
+                    "\ncurrentFurniture_type ${viewModel.furniture_type}" +
+                    "\ncurrentRent_type ${viewModel.rent_type}" +
+                    "\ncurrentMinRating ${viewModel.minRating}" +
+                    "\ncurrentMaxRating ${viewModel.maxRating}" +
+                    "\ncurrentMinFloor ${viewModel.minFloor}" +
+                    "\ncurrentMaxFloor ${viewModel.maxFloor}" +
+                    "\ncurrentMinRooms ${viewModel.minRooms}" +
+                    "\ncurrentMaxRooms ${viewModel.maxRooms}" +
+                    "\ncurrentMinPrice ${viewModel.minPrice}" +
+                    "\ncurrentMaxPrice ${viewModel.maxPrice}"
+        )
     }
-    private fun setFilterValuesOnUI(){
-        binding.apply{
 
-            when(viewModel.apt_type){
+    private fun setFilterValuesOnUI() {
+        binding.apply {
+
+            when (viewModel.apt_type) {
                 APT_TYPE_ALL -> aptTypeAll.isChecked = true
                 APT_TYPE_FLAT -> aptTypeFlat.isChecked = true
                 APT_TYPE_HOUSE -> aptTypeHouse.isChecked = true
             }
 
-            when(viewModel.furniture_type){
+            when (viewModel.furniture_type) {
                 APT_FURNISHED_ALL -> furnitureAll.isChecked = true
                 APT_FURNISHED_YES -> furnitureYes.isChecked = true
                 APT_FURNISHED_NO -> furnitureNo.isChecked = true
             }
 
-            for (item in viewModel.rent_type){
-                when(item){
+            for (item in viewModel.rent_type) {
+                when (item) {
                     PRICE_TYPE_ALL -> rentAll.isChecked = true
                     PRICE_TYPE_PER_DAY -> {
                         rentAll.isChecked = false
@@ -211,9 +245,11 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
             setSliderValues()
         }
     }
-    private fun setSliderValues(){
+
+    private fun setSliderValues() {
         binding.apply {
-            val ratings = viewModel.getRatings(ratingRangeSlider.valueFrom, ratingRangeSlider.valueTo)
+            val ratings =
+                viewModel.getRatings(ratingRangeSlider.valueFrom, ratingRangeSlider.valueTo)
             val floors = viewModel.getFloors(floorRangeSlider.valueFrom, floorRangeSlider.valueTo)
             val rooms = viewModel.getRooms(roomRangeSlider.valueFrom, roomRangeSlider.valueTo)
             val prices = viewModel.getPrice(priceRangeSlider.valueFrom, priceRangeSlider.valueTo)
@@ -229,7 +265,8 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
         viewModel.sort_type = sort_type
     }
 
-    inner class RangeSliderListener(private val sliderType: Int): RangeSlider.OnSliderTouchListener{
+    inner class RangeSliderListener(private val sliderType: Int) :
+        RangeSlider.OnSliderTouchListener {
         override fun onStartTrackingTouch(slider: RangeSlider) {
         }
 
@@ -237,7 +274,7 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
             val minValue = slider.values[0]
             val maxValue = slider.values[1]
 
-            when(sliderType){
+            when (sliderType) {
                 SLIDER_TYPE_RATING -> {
                     viewModel.minRating = minValue
                     viewModel.maxRating = maxValue
@@ -259,9 +296,16 @@ class FiltersFragment: BaseFragment<FragmentFiltersBinding>
 
 
     }
-    inner class RadioChangeListener: RadioGroup.OnCheckedChangeListener{
+
+    private fun doAction(a: FiltersViewModel.Action) {
+        when (a.type) {
+            FiltersViewModel.ActionType.UPDATE_UI -> setFilterValuesOnUI()
+        }
+    }
+
+    inner class RadioChangeListener : RadioGroup.OnCheckedChangeListener {
         override fun onCheckedChanged(p0: RadioGroup?, p1: Int) {
-            when(p1){
+            when (p1) {
                 binding.aptTypeFlat.id -> viewModel.apt_type = APT_TYPE_FLAT
                 binding.aptTypeHouse.id -> viewModel.apt_type = APT_TYPE_HOUSE
                 binding.aptTypeAll.id -> viewModel.apt_type = APT_TYPE_ALL

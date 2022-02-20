@@ -23,6 +23,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.runBlocking
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -45,24 +46,28 @@ class MyProfileFragmentViewModel @Inject constructor(
     var loggedThroughGoogle = false
     private val databaseUsers = Firebase.database.reference.child("users")
     private var storageInstance = FirebaseStorage.getInstance()
-    private lateinit var profileImageReference: StorageReference
 
     var imageUriLiveData = MutableLiveData<Uri>()
 
     private var userID = ""
     var displayName: String = ""
 
-    fun fragmentCreate() = viewModelScope.launch {
-        loggedThroughGoogle = datastoreManager.getLoggedThroughGoogle()
-
-        displayName = datastoreManager.getUserDisplayName()
-        myProfileFragmentEventChannel.send(UpdateUserName("Hello, $displayName"))
-        userID = datastoreManager.getUserID()
-
-        profileImageReference = storageInstance.reference.child("ProfileImages").child(userID)
-        profileImageReference.downloadUrl.addOnSuccessListener {
-            imageUriLiveData.value = it
+    init {
+        runBlocking {
+            loggedThroughGoogle = datastoreManager.getLoggedThroughGoogle()
+            displayName = datastoreManager.getUserDisplayName()
+            userID = datastoreManager.getUserID()
+            Log.d("TAG", "init userID: $userID")
+            action.set(
+                Action(ActionType.LOAD_IMAGE, storageRef = createProfileImageRef())
+            )
         }
+    }
+
+    fun fragmentCreate() = viewModelScope.launch {
+        myProfileFragmentEventChannel.send(UpdateUserName(displayName))
+
+        Log.d("TAG", "fragmentCreate userID: $userID")
     }
 
     fun onLogoutButtonClicked() {
@@ -71,6 +76,7 @@ class MyProfileFragmentViewModel @Inject constructor(
 
     private fun logoutUser() {
         viewModelScope.launch {
+            datastoreManager.clearDatastore()
             auth.signOut()
             myProfileFragmentEventChannel.send(NavigateToLoginScreen)
         }
@@ -80,7 +86,7 @@ class MyProfileFragmentViewModel @Inject constructor(
         val uploadReference = fileStorageReference.child(userID)
         uploadReference
             .putBytes(byteArrayData)
-            .addOnSuccessListener { task ->
+            .addOnSuccessListener {
                 fileStorageReference.child(userID).downloadUrl
                     .addOnSuccessListener { uri -> saveDownloadURL(uri) }
 
@@ -104,11 +110,12 @@ class MyProfileFragmentViewModel @Inject constructor(
                 .setDisplayName(displayName)
                 .build()
 
+            Log.d("TAG", "onApplyClicked: currentUserID: $userID")
             FirebaseAuth.getInstance().currentUser?.updateProfile(profileUpdate)
-                ?.addOnSuccessListener {
+                ?.addOnSuccessListener { task: Void? ->
                     databaseUsers.child(userID).child("displayName")
                         .setValue(displayName)
-                        .addOnSuccessListener {
+                        .addOnSuccessListener { t: Void? ->
                             displayNameChanged()
                         }
                         .addOnFailureListener {
@@ -146,12 +153,22 @@ class MyProfileFragmentViewModel @Inject constructor(
         call.enqueue(object : Callback<ExchangeModel> {
             override fun onResponse(call: Call<ExchangeModel>, response: Response<ExchangeModel>) {
                 if (response.isSuccessful) {
-                    val double = response.body()?.rates?.get(toCurrency)?.rate?: 1.0
+                    val double = response.body()?.rates?.get(toCurrency)?.rate ?: 1.0
                     saveCurrency(toCurrency)
                     saveExRate(double)
-                    action.set(Action(ActionType.CURRENCY_RECEIVED, string = toCurrency.toCurrencySymbol()))
+                    action.set(
+                        Action(
+                            ActionType.CURRENCY_RECEIVED,
+                            string = toCurrency.toCurrencySymbol()
+                        )
+                    )
                 } else {
-                    Log.d("TAG", "response failed with code: ${response.code()} and body: ${response.errorBody().toString()}")
+                    Log.d(
+                        "TAG",
+                        "response failed with code: ${response.code()} and body: ${
+                            response.errorBody().toString()
+                        }"
+                    )
                     action.set(Action(ActionType.CURRENCY_CALL_FAILED))
                 }
             }
@@ -174,19 +191,32 @@ class MyProfileFragmentViewModel @Inject constructor(
         datastoreManager.setExchangeRate(exRate)
     }
 
+    private fun createProfileImageRef(): StorageReference? {
+        return if (userID.isEmpty()) null
+        else storageInstance
+            .reference.child("ProfileImages").child(userID)
+    }
+
     enum class ActionType {
         TOGGLE_LOADING,
         CURRENCY_RECEIVED,
-        CURRENCY_CALL_FAILED
+        CURRENCY_CALL_FAILED,
+        LOAD_IMAGE
     }
-    data class Action(val type: ActionType, val bool: Boolean? = null, val double: Double? = null, val string: String? = null)
+
+    data class Action(
+        val type: ActionType,
+        val bool: Boolean? = null,
+        val double: Double? = null,
+        val string: String? = null,
+        val storageRef: StorageReference? = null
+    )
 }
 
 sealed class MyProfileFragmentEvent {
     object NavigateToLoginScreen : MyProfileFragmentEvent()
     data class UpdateUserName(val userName: String) : MyProfileFragmentEvent()
     object DisplayNameChanged : MyProfileFragmentEvent()
-    data class ProfileImageUpdated(val uri: Uri?) : MyProfileFragmentEvent()
     data class SendDisplayNameToastMessage(val message: String) : MyProfileFragmentEvent()
     data class SendToastMessage(val message: String) : MyProfileFragmentEvent()
 }

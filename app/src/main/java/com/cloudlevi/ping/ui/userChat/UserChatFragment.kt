@@ -22,11 +22,13 @@ import com.cloudlevi.ping.BaseFragment
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.data.User
 import com.cloudlevi.ping.databinding.FragmentUserChatBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import com.cloudlevi.ping.ui.userChat.UserChatViewModel.UserChatEvent.*
 import com.cloudlevi.ping.ui.yourBookings.YourBookingsAdapter
+import com.google.firebase.storage.StorageReference
 import com.stfalcon.imageviewer.StfalconImageViewer
 import com.stfalcon.imageviewer.loader.ImageLoader
 
@@ -153,14 +155,15 @@ class UserChatFragment :
         holder.notifyImageItemChanged(pos)
     }
 
-    private fun openImageAt(messagePos: Int, startPos: Int, imagesList: List<Uri>) {
+    private fun openImageAt(messagePos: Int, startPos: Int, imagesList: List<StorageReference>) {
 
         val holder = (binding.chatRecycler.findViewHolderForAdapterPosition(messagePos) as? UserChatAdapter.MessageVH)
         val mediaHolder = (holder?.imagesRecycler?.findViewHolderForAdapterPosition(startPos) as? MessageMediaAdapter.MediaViewHolder)
 
-        val imageLoader: (view: ImageView, image: Uri) -> Unit = { view, image ->
-            Glide.with(view.context)
-                .load(image)
+        val imageLoader: (view: ImageView, imageRef: StorageReference) -> Unit = { view, imageRef ->
+            GlideApp.with(view.context)
+                .load(imageRef)
+                .error(R.drawable.placeholder)
                 .into(view)
         }
         val imageChangeListener: (pos: Int) -> Unit = { pos ->
@@ -203,7 +206,7 @@ class UserChatFragment :
 
     private fun setUserData(user: User) {
         binding.apply {
-            loadUserImage(user.imageUrl?.trim())
+            loadUserImage(viewModel.getReceiverImageURL())
             userNameTV.text = user.displayName
             userStatusTV.text = if (user.userOnline == true) {
                 setStatusDrawable(
@@ -237,13 +240,12 @@ class UserChatFragment :
         multipleImagesResultLauncher?.launch("image/*")
     }
 
-    private fun loadUserImage(url: String?) {
-        if (!url.isNullOrEmpty())
-            Glide.with(requireContext())
-                .load(url)
-                .centerCrop()
-                .into(binding.profileImage)
-        else binding.profileImage.setImageResource(R.drawable.ic_account_24)
+    private fun loadUserImage(storageRef: StorageReference?) {
+        GlideApp.with(requireContext())
+            .load(storageRef)
+            .centerCrop()
+            .error(R.drawable.ic_profile_picture)
+            .into(binding.profileImage)
     }
 
     private fun makeLongToast(msg: String) =

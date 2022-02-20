@@ -284,8 +284,8 @@
                 style="@style/RegularTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_gravity="end"
-                tools:text="USD"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                tools:text="USD" />
 
             <View
                 android:layout_width="match_parent"

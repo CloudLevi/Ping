@@ -1,15 +1,10 @@
 package com.cloudlevi.ping
 
-import android.content.ContentValues
-import android.content.ContentValues.TAG
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
@@ -17,20 +12,20 @@ import com.cloudlevi.ping.data.PreferencesManager
 import com.cloudlevi.ping.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import java.util.*
 import android.os.Build
-import androidx.fragment.app.activityViewModels
 import android.annotation.TargetApi
 import android.content.SharedPreferences
-import androidx.lifecycle.ViewModelProvider
-import java.lang.RuntimeException
+import androidx.core.view.forEach
+import com.cloudlevi.ping.ext.applyText
+import com.cloudlevi.ping.ext.visibleOrGone
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import javax.inject.Inject
-
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -39,6 +34,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private val viewModelMainActivity: MainActivityViewModel by viewModels()
 
+    lateinit var googleSignInClient: GoogleSignInClient
+    private val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(BuildConfig.G_CLIENT_ID)
+        .requestEmail()
+        .build()
+
     @Inject
     lateinit var dataStoreManager: PreferencesManager
 
@@ -46,9 +47,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        ToyotaUI.main()
 
         firebaseAuth = FirebaseAuth.getInstance()
 
@@ -128,18 +132,12 @@ class MainActivity : AppCompatActivity() {
         navController.graph = navGraph
 
         NavigationUI.setupWithNavController(binding.bottomMenu, navController)
-        //setupActionBarWithNavController(navController)
-
-//        navController.addOnDestinationChangedListener { controller, destination, arguments ->
-//            when (destination.id) {
-//                R.id.loginFragment -> hideNavigation()
-//                R.id.registerFragment -> hideNavigation()
-//                R.id.userChatFragment -> hideNavigation()
-//                else -> showNavigation()
-//            }
-//        }
-
     }
+
+//    override fun onBackPressed() {
+//        if (navController.currentDestination?.id == R.id.loginFragment) finish()
+//        else super.onBackPressed()
+//    }
 
     fun hideNavigation() {
         binding.bottomMenu.visibility = View.GONE
@@ -149,9 +147,18 @@ class MainActivity : AppCompatActivity() {
         binding.bottomMenu.visibility = View.VISIBLE
     }
 
-    fun switchLoading(isLoading: Boolean) {
-        binding.progressLayout.visibility = if (isLoading) View.VISIBLE
-        else View.GONE
+    fun switchLoading(isLoading: Boolean, progressText: String = "") {
+        binding.apply {
+            progressLayout.visibleOrGone(isLoading)
+            bottomMenu.menu.forEach {
+                it.isEnabled = !isLoading
+            }
+            progressTV.applyText(progressText)
+        }
+    }
+
+    fun changeLoadingText(progressText: String) {
+        binding.progressTV.applyText(progressText)
     }
 
     fun setLocale(languageCode: String?) {
@@ -165,7 +172,7 @@ class MainActivity : AppCompatActivity() {
         invalidateBottomBar()
     }
 
-    private fun invalidateBottomBar(){
+    private fun invalidateBottomBar() {
         binding.bottomMenu.menu.clear()
         binding.bottomMenu.inflateMenu(R.menu.bottom_navigation)
         NavigationUI.setupWithNavController(binding.bottomMenu, navController)

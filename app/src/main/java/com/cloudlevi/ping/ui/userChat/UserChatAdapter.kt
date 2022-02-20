@@ -20,6 +20,7 @@ import com.cloudlevi.ping.databinding.ItemOtherMessageBinding
 import com.cloudlevi.ping.databinding.ItemUserMessageBinding
 import com.cloudlevi.ping.ext.*
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.stfalcon.imageviewer.StfalconImageViewer
 import com.stfalcon.imageviewer.loader.ImageLoader
 import kotlin.math.log
@@ -88,21 +89,15 @@ class UserChatAdapter(
         }
     }
 
-    fun updateImageForMessageAtPos(messagePos: Int, imagePos: Int, newURL: Uri) {
-        currentList[messagePos].imagesList[imagePos] = newURL
+    fun updateImageForMessageAtPos(messagePos: Int, imagePos: Int, newImageRef: StorageReference) {
+        currentList[messagePos].imagesList[imagePos] = newImageRef
     }
 
-    fun updateImagesForPos(messagePos: Int, list: List<Uri>) {
+    fun updateImagesForPos(messagePos: Int, list: List<StorageReference>) {
         currentList[messagePos].imagesList = list.toMutableList()
     }
 
     inner class MessageVH(val binding: ViewBinding) : RecyclerView.ViewHolder(binding.root) {
-
-//        private var savedScrollPos = 0
-//            set(value) {
-//                field = value
-//                Log.d("DEBUG1", "savedScrollPos updated for ${messageTV.text} with $value")
-//            }
 
         val imagesRecycler = binding.root.findViewById<RecyclerView>(R.id.imagesRecycler)
         private val counterText = binding.root.findViewById<TextView>(R.id.counterText)

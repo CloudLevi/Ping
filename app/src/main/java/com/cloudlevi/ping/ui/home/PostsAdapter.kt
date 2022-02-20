@@ -1,6 +1,6 @@
 package com.cloudlevi.ping.ui.home
 
-import android.content.ContentValues.TAG
+import android.location.Geocoder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -15,12 +15,26 @@ import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.databinding.ApartmentPostGridviewItemBinding
 import com.cloudlevi.ping.databinding.ApartmentPostListviewItemBinding
+import com.cloudlevi.ping.di.GlideApp
+import com.cloudlevi.ping.ext.getAddress
+import com.cloudlevi.ping.ext.getStreet
+import com.cloudlevi.ping.ext.makeGone
+import com.cloudlevi.ping.ext.makeVisible
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
+import com.google.firebase.storage.FirebaseStorage
 import java.text.DecimalFormat
+import kotlin.system.measureTimeMillis
 
-class PostsAdapter(val listType: Int, val listener: OnPostClickedListener) :
+class PostsAdapter(
+    val listType: Int,
+    val listener: OnPostClickedListener,
+    val geocoder: Geocoder
+) :
     ListAdapter<ApartmentHomePost, PostsAdapter.PostsViewHolder>(DiffCallback()) {
+
+    private val fileStorageReference =
+        FirebaseStorage.getInstance().getReference("ApartmentUploads")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostsViewHolder {
         when (listType) {
@@ -57,12 +71,12 @@ class PostsAdapter(val listType: Int, val listener: OnPostClickedListener) :
         holder.bind(currentItem)
     }
 
-    inner class PostsViewHolder(private var binding: ViewBinding, private val listType: Int) :
+    inner class PostsViewHolder(private val binding: ViewBinding, private val listType: Int) :
         RecyclerView.ViewHolder(binding.root) {
 
         init {
             binding.root.setOnClickListener {
-                listener.onItemClickedListener(adapterPosition)
+                listener.onItemClickedListener(bindingAdapterPosition)
             }
         }
 
@@ -77,7 +91,8 @@ class PostsAdapter(val listType: Int, val listener: OnPostClickedListener) :
         fun bind(aptPost: ApartmentHomePost) {
 
             val df = DecimalFormat("#.#")
-            val locationString = aptPost.city + ", " + aptPost.address
+            //val locationString = aptPost.createLatLng().getAddress(itemView.context, geocoder)
+            val locationString = aptPost.locationString
             var priceType = ""
             var apartmentDrawable = 0
             when (aptPost.priceType) {
@@ -92,72 +107,34 @@ class PostsAdapter(val listType: Int, val listener: OnPostClickedListener) :
 
             titleTextView.text = aptPost.title
             locationTextView.text = locationString
-            priceTextView.text = aptPost.getPricingText()
+            priceTextView.text = aptPost.mGetPricingText()
             priceTypeTextView.text = priceType
             apartmentTypeImage.setImageResource(apartmentDrawable)
-            ratingTextView.text = df.format(aptPost.calculateAverageRating())
 
-            Glide.with(itemView)
-                .load(aptPost.firstImageReference)
-                .centerCrop()
-                .placeholder(R.drawable.progress_animation_small)
-                .into(aptImageView)
+            val avgRating = aptPost.calculateAverageRating()
+            if (avgRating == 0.0) {
+                ratingTextView.makeGone()
+            } else {
+                ratingTextView.text = df.format(avgRating)
+                ratingTextView.makeVisible()
+            }
+
+            if (aptPost.firstImageReference.isNullOrEmpty()) {
+                GlideApp.with(itemView)
+                    .load(fileStorageReference.child(aptPost.apartmentPostID).child("0"))
+                    .centerCrop()
+                    .into(aptImageView)
+            } else {
+                //legacy code
+                Glide.with(itemView)
+                    .load(aptPost.firstImageReference)
+                    .centerCrop()
+                    .into(aptImageView)
+            }
 
             aptImageView.shapeAppearanceModel = aptImageView.shapeAppearanceModel.toBuilder()
                 .setAllCorners(CornerFamily.ROUNDED, 20f)
                 .build()
-
-//            when(listType){
-//                HOMEFRAGMENT_LISTVIEW -> {
-//                    (binding as ApartmentPostListviewItemBinding).apply {
-//                        titleTextView.text = aptPost.title
-//                        locationTextView.text = locationString
-//                        priceTextView.text = addRearSymbol(aptPost.price.toString(), "$")
-//                        priceTypeTextView.text = priceType
-//                        apartmentType.setImageResource(apartmentDrawable)
-//                        ratingTextView.text = df.format(aptPost.calculateAverageRating())
-//
-//                        Glide.with(itemView)
-//                            .load(aptPost.firstImageReference)
-//                            .centerCrop()
-//                            .placeholder(R.drawable.progress_animation_small)
-//                            .into(aptImageView)
-//
-//                        aptImageView.shapeAppearanceModel = aptImageView.shapeAppearanceModel.toBuilder()
-//                            .setAllCorners(CornerFamily.ROUNDED, 20f)
-//                            .build()
-//                    }
-//                }
-//                HOMEFRAGMENT_GRIDVIEW -> {
-//                    (binding as ApartmentPostGridviewItemBinding).apply {
-//                        titleTextView.text = aptPost.title
-//                        locationTextView.text = locationString
-//                        priceTextView.text = addRearSymbol(aptPost.price.toString(), "$")
-//                        priceTypeTextView.text = priceType
-//                        apartmentType.setImageResource(apartmentDrawable)
-//                        ratingTextView.text = df.format(aptPost.calculateAverageRating())
-//
-//                        Glide.with(itemView)
-//                            .load(aptPost.firstImageReference)
-//                            .centerCrop()
-//                            .placeholder(R.drawable.progress_animation_small)
-//                            .into(aptImageView)
-//
-//                        aptImageView.shapeAppearanceModel = aptImageView.shapeAppearanceModel.toBuilder()
-//                            .setAllCorners(CornerFamily.ROUNDED, 20f)
-//                            .build()
-//                    }
-//                }
-//            }
-        }
-
-        private fun addRearSymbol(text: String, symbol: String): String {
-            return "$text$symbol"
-        }
-
-        private fun determineRoomText(roomAmount: Int): String {
-            return if (roomAmount % 10 == 1) "$roomAmount room"
-            else "$roomAmount rooms"
         }
     }
 

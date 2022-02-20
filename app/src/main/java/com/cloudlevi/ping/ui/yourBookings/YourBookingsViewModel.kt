@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.cloudlevi.ping.ui.yourBookings.YourBookingsViewModel.ActionType.*
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.runBlocking
+import com.google.firebase.storage.StorageReference
 
 @HiltViewModel
 class YourBookingsViewModel @Inject constructor(
@@ -44,7 +44,9 @@ class YourBookingsViewModel @Inject constructor(
 
     private val bookingsRef = FirebaseDatabase.getInstance().getReference("bookings")
     private val aptsRef = FirebaseDatabase.getInstance().getReference("apartments")
+
     private var storageRef = FirebaseStorage.getInstance().getReference("ApartmentUploads")
+    private var userStorageRef = FirebaseStorage.getInstance().getReference("ProfileImages")
 
     fun fragmentCreated(rentalMode: RentalMode) {
 
@@ -67,12 +69,14 @@ class YourBookingsViewModel @Inject constructor(
                         val currentTime = System.currentTimeMillis()
 
                         bookingsList = snapshot.children.map { childSnapshot ->
-                            val bModel = BookingModel.createFromSnapshot(childSnapshot, exRate, currency) ?: return
+                            val bModel =
+                                BookingModel.createFromSnapshot(childSnapshot, exRate, currency)
+                                    ?: return
                             updateBookingStatus(bModel)
-                        }.sortedBy { it.getCheckInLong() - currentTime }.toMutableList()
+                        }.sortedBy { it.mGetCheckInLong() - currentTime }.toMutableList()
 
                         val finished = bookingsList
-                            .filter { it.getPaymentStatusEnum() == BookingStatus.FINISHED }
+                            .filter { it.mGetPaymentStatusEnum() == BookingStatus.FINISHED }
 
                         bookingsList.addAll(finished)
 
@@ -100,21 +104,22 @@ class YourBookingsViewModel @Inject constructor(
                     override fun onDataChange(snapshot: DataSnapshot) {
                         super.onDataChange(snapshot)
 
-                        val apt = ApartmentHomePost.createFromSnapshot(snapshot, currency, exRate)?: return
+                        val apt = ApartmentHomePost.createFromSnapshot(snapshot, currency, exRate)
+                            ?: return
 
-                        bookingsList[index].aImagesList = (0..apt.imageCount).map { Uri.EMPTY }.toMutableList()
+                        getImageLinks(apt, index)
+//                        bookingsList[index].aImagesList =
+//                            (0..apt.imageCount).map { storageRef.child() }.toMutableList()
 
                         bookingsList[index].apply {
                             aAcreage = apt.acreage
-                            aCity = apt.city
-                            aCountry = apt.country
+                            aCountryCode = apt.countryCode
                             aFurniture = apt.isFurnished
-                            aLocation = apt.address
+                            aLatLng = apt.createLatLng()
                             aRating = apt.calculateAverageRating().toFloat()
                             aRoomCount = apt.roomAmount
                             aTitle = apt.title
                         }
-                        getImageLinks(apt, index)
 
                         count++
                         if (count == totalCount) adapter.update()
@@ -137,13 +142,13 @@ class YourBookingsViewModel @Inject constructor(
     else "landlordID"
 
     private fun updateBookingStatus(bModel: BookingModel): BookingModel {
-        val checkInDate = bModel.getCheckInLong()
+        val checkInDate = bModel.mGetCheckInLong()
         val checkOutDate = bModel.checkOutDate ?: 0L
         val currentTime = System.currentTimeMillis()
 
         val status = when {
             (currentTime < checkInDate) -> {
-                if (bModel.isPaymentCreditCard()) BookingStatus.PAID
+                if (bModel.mIsPaymentCreditCard()) BookingStatus.PAID
                 else BookingStatus.BOOKED
             }
             (currentTime in checkInDate..checkOutDate) -> BookingStatus.IN_PROGRESS
@@ -158,20 +163,27 @@ class YourBookingsViewModel @Inject constructor(
     }
 
     private fun getImageLinks(aModel: ApartmentHomePost, index: Int) {
-        Log.d("DEBUG", "getImageLinks: ${aModel.apartmentPostID}, $index")
+        Log.d(
+            "DEBUG",
+            "getImageLinks: ${aModel.apartmentPostID}, bookingsList: ${bookingsList.getOrNull(index)}, aImagesList: ${
+                bookingsList.getOrNull(index)?.aImagesList
+            }"
+        )
+
         (0..aModel.imageCount).forEach { pos ->
-            storageRef.child(aModel.timeStamp.toString())
-                .child(pos.toString()).downloadUrl.addOnSuccessListener { downloadURL ->
-                    bookingsList[index].aImagesList!![pos] = downloadURL
-                    doAction.set(Action(UPDATE_IMAGE, pos = index))
-                }.addOnFailureListener {
-                    Log.d("DEBUG", "getImageLinks FAILURE: ${aModel.apartmentPostID}, $index, msg: ${it.message}")
-                }
+            bookingsList[index].aImagesList.add(
+                storageRef.child(aModel.apartmentPostID).child(pos.toString())
+            )
         }
     }
 
     fun notifyRecyclerResize() {
         doAction.set(Action(NOTIFY_RECYCLER_RESIZE))
+    }
+
+    fun getUserImageRef(userID: String?): StorageReference? {
+        userID ?: return null
+        return userStorageRef.child(userID)
     }
 
     enum class ActionType {
@@ -190,12 +202,12 @@ class YourBookingsViewModel @Inject constructor(
         @StringRes val resID: Int? = null
     )
 
-    override fun getCurrentListByID(id: String?): MutableList<Uri> {
+    override fun getCurrentListByID(id: String?): MutableList<StorageReference> {
         return bookingsList.find { it.bookingID == id }?.aImagesList ?: mutableListOf()
     }
 
-    override fun getCurrentListByPos(pos: Int): MutableList<Uri> {
-        return bookingsList[pos].aImagesList ?: mutableListOf()
+    override fun getCurrentListByPos(pos: Int): MutableList<StorageReference> {
+        return bookingsList[pos].aImagesList
     }
 
     override fun onMediaImageClick(id: String?, position: Int?) {

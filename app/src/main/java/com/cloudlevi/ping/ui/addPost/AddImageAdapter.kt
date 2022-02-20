@@ -2,6 +2,7 @@ package com.cloudlevi.ping.ui.addPost
 
 import android.content.ContentValues.TAG
 import android.gesture.GestureLibraries
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
@@ -50,10 +51,11 @@ class AddImageAdapter(
             if (addImageModel.uri != Uri.EMPTY) Glide.with(itemView)
                 .load(addImageModel.uri)
                 .centerCrop()
+                .transition(DrawableTransitionOptions.withCrossFade())
                 .into(binding.imageAddButton)
-            else binding.imageAddButton.setImageResource(0)
+            else binding.imageAddButton.setImageResource(R.drawable.button_image_selection)
 
-            addImageModel.viewID = adapterPosition
+            addImageModel.viewID = bindingAdapterPosition
 
             binding.apply {
                 imageAddButton.setOnClickListener {

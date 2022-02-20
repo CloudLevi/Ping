@@ -6,15 +6,23 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.cloudlevi.ping.MediaAdapterVM
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.databinding.ItemSimpleImageBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.sizeTheSame
+import com.google.firebase.storage.StorageReference
 
-class MessageMediaAdapter(val vm: MediaAdapterVM, private var id: String? = null) :
+class MessageMediaAdapter(
+    val vm: MediaAdapterVM,
+    private var id: String? = null,
+    val doCrop: Boolean = true
+) :
     RecyclerView.Adapter<MessageMediaAdapter.MediaViewHolder>() {
 
-    private var currentList = mutableListOf<Uri>()
+    private var currentList = mutableListOf<StorageReference>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaViewHolder {
         return MediaViewHolder(
@@ -31,11 +39,8 @@ class MessageMediaAdapter(val vm: MediaAdapterVM, private var id: String? = null
     override fun getItemCount() = currentList.size
 
     fun updateList(pos: Int? = null) {
-        Log.d("DEBUG", "updateList: pos: $pos, id: $id")
         val newList = if (pos == null) vm.getCurrentListByID(id).toMutableList()
         else vm.getCurrentListByPos(pos).toMutableList()
-
-        Log.d("DEBUG", "updateList: newList: $newList")
 
         if (sizeTheSame(currentList, newList)) {
             newList.forEachIndexed { index, uri ->
@@ -51,11 +56,11 @@ class MessageMediaAdapter(val vm: MediaAdapterVM, private var id: String? = null
         }
     }
 
-    fun updateID(newID: String){
+    fun updateID(newID: String) {
         id = newID
     }
 
-    fun updateList(list: List<Uri>) {
+    fun updateList(list: List<StorageReference>) {
         val newList = list.toMutableList()
 
         if (sizeTheSame(currentList, newList)) {
@@ -72,15 +77,10 @@ class MessageMediaAdapter(val vm: MediaAdapterVM, private var id: String? = null
         }
     }
 
-    fun applyListOnly(newList: MutableList<Uri>) {
+    fun applyListOnly(newList: List<StorageReference>) {
         currentList.clear()
         currentList.addAll(newList)
     }
-
-//    fun itemUpdated(pos: Int) {
-//        currentList[pos] = vm.getCurrentListByID(id)[pos]
-//        notifyItemChanged(pos)
-//    }
 
     inner class MediaViewHolder(val binding: ItemSimpleImageBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -91,16 +91,14 @@ class MessageMediaAdapter(val vm: MediaAdapterVM, private var id: String? = null
             }
         }
 
-        fun bind(imageURI: Uri?) {
-            if (imageURI == null || imageURI == Uri.EMPTY)
-                Glide.with(itemView.context)
-                    .load(R.drawable.placeholder)
-                    .centerCrop()
-                    .into(binding.imageView)
-            else Glide.with(itemView.context)
-                .load(imageURI)
-                .centerCrop()
-                .into(binding.imageView)
+        fun bind(imageRef: StorageReference?) {
+            var gRequest = GlideApp.with(itemView.context)
+                .load(imageRef)
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
+
+            if (doCrop) gRequest = gRequest.centerCrop()
+            gRequest.into(binding.imageView)
         }
     }
 }

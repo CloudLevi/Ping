@@ -3,7 +3,6 @@ package com.cloudlevi.ping.ui.bookingFragment
 import android.content.ContentValues
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cloudlevi.ping.*
@@ -14,8 +13,9 @@ import javax.inject.Inject
 import com.cloudlevi.ping.ui.bookingFragment.BookingViewModel.ActionType.*
 import com.cloudlevi.ping.ui.userChat.MessageMediaAdapter
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.gson.Gson
-import com.stripe.android.model.CardParams
 import com.stripe.android.model.ConfirmPaymentIntentParams
 import com.stripe.android.model.PaymentMethodCreateParams
 import kotlinx.coroutines.launch
@@ -23,7 +23,6 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
-import java.text.DecimalFormat
 import java.util.HashMap
 import kotlin.math.ceil
 
@@ -40,6 +39,7 @@ class BookingViewModel @Inject constructor(
 
     private val usersRef = FirebaseDatabase.getInstance().getReference("users")
     private val bookingsRef = FirebaseDatabase.getInstance().getReference("bookings")
+    private val storageRef = FirebaseStorage.getInstance()
     private var userID = ""
 
     var checkInDateLong = 0L
@@ -84,6 +84,12 @@ class BookingViewModel @Inject constructor(
 
     fun isPaymentTypeSelected() = paymentType != PaymentType.NONE
 
+    fun getCurrentHomePostImages(): List<StorageReference> {
+        return currentHomePost?.imagesList
+            ?.map { storageRef.getReferenceFromUrl(it) }
+            ?: listOf()
+    }
+
     init {
         viewModelScope.launch {
             userID = preferencesManager.getUserID()
@@ -93,7 +99,7 @@ class BookingViewModel @Inject constructor(
     fun fragmentCreated(apartmentHomePost: ApartmentHomePost, mLandLord: User) {
         currentHomePost = apartmentHomePost
         landLord = mLandLord
-        imagesAdapter.applyListOnly(currentHomePost?.imagesList ?: mutableListOf())
+        imagesAdapter.applyListOnly(getCurrentHomePostImages())
         imagesAdapter.notifyItemRangeInserted(0, currentHomePost?.imagesList?.size ?: 0)
     }
 
@@ -113,13 +119,10 @@ class BookingViewModel @Inject constructor(
     }
 
     fun calculatePricing() {
-
         val rate = currentHomePost?.price?.toDouble() ?: return
-        val rateLocalized = currentHomePost?.getCalculationPrice() ?: return
+        val rateLocalized = currentHomePost?.mGetCalculationPrice() ?: return
         val rateDailyLocalized: Double
-
         val priceType = currentHomePost?.priceType ?: return
-
         val rateDaily = when (priceType) {
             PRICE_TYPE_PER_DAY -> {
                 rateDailyLocalized = rateLocalized
@@ -151,7 +154,6 @@ class BookingViewModel @Inject constructor(
             .getTime()
 
         val differenceMillis = checkOutDateLong - checkInDateLong
-
         var days = differenceMillis / daysInMilli
         if (days == 0L) days = 1L
         val hours = (differenceMillis % daysInMilli) / hoursInMilli
@@ -159,11 +161,11 @@ class BookingViewModel @Inject constructor(
 
         aptPrice = (days * rateDaily).roundTo(2)
         aptPriceLocalized = (days * rateDailyLocalized).roundTo(2)
-
         pingFee = if (paymentType == PaymentType.CARD) (aptPrice * 0.02).roundTo(2)
         else 0.0
-        pingFeeLocalized = if (paymentType == PaymentType.CARD) (aptPriceLocalized * 0.02).roundTo(2)
-        else 0.0
+        pingFeeLocalized =
+            if (paymentType == PaymentType.CARD) (aptPriceLocalized * 0.02).roundTo(2)
+            else 0.0
     }
 
     fun startPayment(cardParams: PaymentMethodCreateParams) {
@@ -182,24 +184,18 @@ class BookingViewModel @Inject constructor(
             .build()
         httpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                doAction.post(Action(TOAST, msg = "Pay request not successful. Please try again"))
+                doAction.post(Action(TOAST, msg = "Payment request not successful. Please try again"))
                 doAction.post(Action(TOGGLE_PROGRESS, bool = false))
                 Log.d(ContentValues.TAG, "onFailure: ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful)
-                    doAction.post(
-                        Action(
-                            TOAST,
-                            msg = "Pay request not successful. Please try again"
-                        )
-                    )
+                    doAction.post(Action(TOAST, msg = "Payment request not successful. Please try again"))
                 else {
                     secretReceived(response, cardParams)
                 }
             }
-
         })
     }
 
@@ -225,7 +221,6 @@ class BookingViewModel @Inject constructor(
             landlordID = aPost.landLordID,
             landLordDisplayName = landLord?.displayName,
             landLordUserName = landLord?.username,
-            landLordImageURL = landLord?.imageUrl,
             tenantID = userID,
             checkInDate = checkInDateLong,
             checkInTime = hoursMinutesToMillis(checkInHour, checkInMinute),
@@ -237,17 +232,17 @@ class BookingViewModel @Inject constructor(
             rentTotal = total
         )
 
-        bookingsRef.child(bookingID).setValue(bookingModel).addOnSuccessListener {
+        bookingsRef.child(bookingID).setValue(bookingModel).addOnSuccessListener { task: Void? ->
             doAction.set(Action(BOOKING_CREATED))
         }
     }
 
-    override fun getCurrentListByID(id: String?): MutableList<Uri> {
-        return currentHomePost?.imagesList ?: mutableListOf()
+    override fun getCurrentListByID(id: String?): MutableList<StorageReference> {
+        return getCurrentHomePostImages().toMutableList()
     }
 
-    override fun getCurrentListByPos(pos: Int): MutableList<Uri> {
-        return currentHomePost?.imagesList ?: mutableListOf()
+    override fun getCurrentListByPos(pos: Int): MutableList<StorageReference> {
+        return getCurrentHomePostImages().toMutableList()
     }
 
     override fun onMediaImageClick(id: String?, position: Int?) {

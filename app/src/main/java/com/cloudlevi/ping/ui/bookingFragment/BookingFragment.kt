@@ -28,6 +28,7 @@ import com.cloudlevi.ping.STRIPE_KEY_TEST
 import com.cloudlevi.ping.data.PaymentType
 import com.cloudlevi.ping.data.RentalMode
 import com.cloudlevi.ping.databinding.FragmentBookingBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.*
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -37,7 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.cloudlevi.ping.ui.bookingFragment.BookingViewModel.Action
 import com.cloudlevi.ping.ui.bookingFragment.BookingViewModel.ActionType.*
 import com.cloudlevi.ping.ui.userChat.MessageMediaAdapter
-import com.cloudlevi.ping.ui.yourBookings.YourBookingsViewModel
+import com.google.firebase.storage.StorageReference
 import com.stfalcon.imageviewer.StfalconImageViewer
 import com.stripe.android.ApiResultCallback
 import com.stripe.android.PaymentIntentResult
@@ -98,7 +99,6 @@ class BookingFragment :
     }
 
     private fun showDatePicker() {
-
         val constraints =
             CalendarConstraints.Builder()
                 .setValidator(DateValidatorPointForward.now())
@@ -228,11 +228,13 @@ class BookingFragment :
 
         val mediaHolder =
             (binding.imagesRecycler.findViewHolderForAdapterPosition(startPos) as? MessageMediaAdapter.MediaViewHolder)
-        val imagesList = viewModel.currentHomePost?.imagesList
+        val imagesList = viewModel.getCurrentHomePostImages()
 
-        val imageLoader: (view: ImageView, image: Uri) -> Unit = { view, image ->
-            Glide.with(view.context)
-                .load(image)
+        val imageLoader: (view: ImageView, imgRef: StorageReference) -> Unit = { view, imgRef ->
+            GlideApp.with(view.context)
+                .load(imgRef)
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
                 .into(view)
         }
         val imageChangeListener: (pos: Int) -> Unit = { pos ->
@@ -256,6 +258,10 @@ class BookingFragment :
 
     private fun proceedBooking() {
         binding.apply {
+            if (!hasInternet()) {
+                sendLongToast(R.string.network_error_message)
+                return
+            }
             if (!fieldsValidated()) return
 
             when {
@@ -352,12 +358,12 @@ class BookingFragment :
 
             applyTimeText(viewModel.checkInHour, viewModel.checkInMinute)
 
-            val countryText = if (apPost.country.isEmpty()) "" else
-                ", ${apPost.country}"
-            val cityText = "${apPost.city}${countryText}"
+            //todo rework this thing
+            val countryText = apPost.createLatLng().countryCode(requireContext())
+            val cityText = apPost.createLatLng().getAddress(requireContext())
 
-            locationTV.text = apPost.address
-            cityTV.text = cityText
+            locationTV.text = cityText
+            cityTV.text = countryText
             val acreageText = String.format(resources.getString(R.string.m2), apPost.acreage)
             acreageTV.text = HtmlCompat.fromHtml(acreageText, HtmlCompat.FROM_HTML_MODE_LEGACY)
             roomCountTV.text = apPost.roomCountString(requireContext())
@@ -365,7 +371,7 @@ class BookingFragment :
             else getString(R.string.no_furniture)
             ratingTV.text = apPost.calculateAverageRating().toString()
             val priceText =
-                "${apPost.getPricingText()}/${apPost.priceTypeString(requireContext())}"
+                "${apPost.mGetPricingText()}/${apPost.priceTypeString(requireContext())}"
             priceTV.text = priceText
 
             imagesRecycler.adapter = viewModel.imagesAdapter

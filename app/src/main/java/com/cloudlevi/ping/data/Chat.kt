@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
 import com.google.firebase.database.Exclude
+import com.google.firebase.storage.StorageReference
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -27,7 +28,7 @@ data class Message(
 
     @IgnoredOnParcel
     @Exclude
-    @set:Exclude @get:Exclude var imagesList: MutableList<Uri> = mutableListOf()
+    @set:Exclude @get:Exclude var imagesList: MutableList<StorageReference> = mutableListOf()
 
     fun hasMedia() = mediaCount != null && mediaCount != 0
 

@@ -11,6 +11,8 @@ import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.AddImageModel
 import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.data.PreferencesManager
+import com.cloudlevi.ping.ext.ActionLiveData
+import com.cloudlevi.ping.ext.hasInternet
 import com.cloudlevi.ping.ui.addPost.AddPostFragmentEvent.*
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -20,7 +22,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.cloudlevi.ping.ui.addPost.*
+import com.google.android.gms.maps.model.LatLng
 
 @HiltViewModel
 class AddPostFragmentViewModel @Inject constructor(
@@ -28,7 +30,7 @@ class AddPostFragmentViewModel @Inject constructor(
     private val state: SavedStateHandle
 ) : ViewModel() {
 
-    val action = MutableLiveData<AddPostEvent>()
+    val action = ActionLiveData<AddPostEvent>()
 
     private val addPostFragmentEventChannel = Channel<AddPostFragmentEvent>()
     private val fileStorageReference =
@@ -40,14 +42,17 @@ class AddPostFragmentViewModel @Inject constructor(
     var apartmentModel = ApartmentHomePost()
 
     init {
-        viewModelScope.launch {
-            getUserID()
-        }
+        getUserID()
     }
 
-    var userID: String = ""
+    fun init() {
+        getUserID()
+    }
+
+    var userID: String = state.get<String>("userID") ?: ""
         set(value) {
             field = value
+            state.set("userID", value)
             apartmentModel.landLordID = value
         }
 
@@ -93,17 +98,18 @@ class AddPostFragmentViewModel @Inject constructor(
             state.set("acreageValue", value)
             apartmentModel.acreage = value
         }
-    var city: String = state.get<String>("cityValue") ?: ""
+    var latLng: LatLng? = state.get<LatLng>("latLng")
         set(value) {
             field = value
-            state.set("cityValue", value)
-            apartmentModel.city = value
+            state.set("latLng", value)
+            apartmentModel.latitude = value?.latitude ?: 0.0
+            apartmentModel.longitude = value?.longitude ?: 0.0
         }
-    var address: String = state.get<String>("addressValue") ?: ""
+    var countryCode: String? = state.get<String>("countryCode")
         set(value) {
             field = value
-            state.set("addressValue", value)
-            apartmentModel.address = value
+            state.set("countryCode", value)
+            apartmentModel.countryCode = value ?: ""
         }
     var description: String = state.get<String>("descriptionValue") ?: ""
         set(value) {
@@ -195,67 +201,62 @@ class AddPostFragmentViewModel @Inject constructor(
                     uri = Uri.EMPTY
                 }
 
-                action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
+                sendAction(AddPostAction.ADAPTER_CHANGED)
             }
         }
     }
 
     fun handleFinishedImageIntent(uri: Uri?, byteArrayCompressed: ByteArray) {
-
-        for ((index, model) in imagesArray.withIndex()) {
-
+        imagesArray.forEachIndexed { index, addImageModel ->
             //If it's empty, fill it in
-            if (!model.filledIn) {
-                if (uri != null) {
-                    imagesArray[index] = model.copy(
-                        filledIn = true,
-                        uri = uri,
-                        byteArrayCompressed = byteArrayCompressed
-                    )
-                    action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
-                    return
-                }
+            if (!addImageModel.filledIn && uri != null) {
+                imagesArray[index] = addImageModel.copy(
+                    filledIn = true,
+                    uri = uri,
+                    byteArrayCompressed = byteArrayCompressed
+                )
+                sendAction(AddPostAction.ADAPTER_CHANGED)
+                return
             }
             //If it's not empty, AND:
             //If this is the clicked one, and it's empty - insert image
-            if (model.viewID == latestClickedImageButton && !model.filledIn) {
-                if (uri == null) {
-                    action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
-                    return
-                } else {
+            if (addImageModel.viewID == latestClickedImageButton && !addImageModel.filledIn) {
+                if (uri == null) sendAction(AddPostAction.ADAPTER_CHANGED)
+                else {
                     imagesArray[index] =
-                        model.copy(uri = uri, byteArrayCompressed = byteArrayCompressed)
-                    action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
-                    return
+                        addImageModel.copy(uri = uri, byteArrayCompressed = byteArrayCompressed)
+                    sendAction(AddPostAction.ADAPTER_CHANGED)
                 }
+                return
             }
-
-            if (model.viewID == latestClickedImageButton) {
-                if (uri == null) {
-                    action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
-                    return
-                } else {
+            if (addImageModel.viewID == latestClickedImageButton) {
+                if (uri == null) sendAction(AddPostAction.ADAPTER_CHANGED)
+                else {
                     imagesArray[index] =
-                        model.copy(uri = uri, byteArrayCompressed = byteArrayCompressed)
-                    action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
-                    return
+                        addImageModel.copy(uri = uri, byteArrayCompressed = byteArrayCompressed)
+                    sendAction(AddPostAction.ADAPTER_CHANGED)
                 }
+                return
             }
-
         }
     }
 
     fun onUploadButtonClicked() {
+        if (!hasInternet()) {
+            sendAction(AddPostAction.NETWORK_ERROR)
+            return
+        }
         if (checkAllFieldsValidity()) startUploadingApartment()
     }
 
     private fun startUploadingApartment() {
+        val postID = apartmentsDatabaseReference.push().key
+            ?: System.currentTimeMillis().toString()
         changeProgressBarStatus(View.VISIBLE)
-        apartmentModel.timeStamp = System.currentTimeMillis()
-        val uploadImagesReference = fileStorageReference.child(
-            apartmentModel.timeStamp.toString()
-        )
+
+        val uploadImagesReference = fileStorageReference.child(postID)
         var index = 0
+
         setProgressText(index)
         for (currentImage in imagesArray) {
 
@@ -263,7 +264,7 @@ class AddPostFragmentViewModel @Inject constructor(
                 uploadImagesReference
                     .child(currentImage.viewID.toString())
                     .putBytes(currentImage.byteArrayCompressed)
-                    .addOnSuccessListener { task ->
+                    .addOnSuccessListener {
                         index++
                         setProgressText(index)
                     }
@@ -275,26 +276,16 @@ class AddPostFragmentViewModel @Inject constructor(
                 uploadImagesReference
                     .child(currentImage.viewID.toString())
                     .putBytes(currentImage.byteArrayCompressed)
-                    .addOnSuccessListener { task ->
+                    .addOnSuccessListener {
                         index++
                         setProgressText(index)
-
-                        apartmentModel.imagesReference = uploadImagesReference.toString()
-                        uploadDataFields(uploadImagesReference.child("0"))
+                        uploadDataFields(postID)
                     }
                     .addOnFailureListener {
                         sendToastMessage(it.message.toString())
                     }
             }
         }
-    }
-
-    fun switchRecyclerViewChildrenStatus(status: Boolean) {
-        for (currentImage in imagesArray) {
-            currentImage.enabledStatus = status
-        }
-
-        action.value = AddPostEvent(AddPostAction.ADAPTER_CHANGED)
     }
 
     fun pickerButtonClicked(clickType: Int, pickerType: Int) {
@@ -314,25 +305,27 @@ class AddPostFragmentViewModel @Inject constructor(
         }
     }
 
-    private fun uploadDataFields(imagesReference: StorageReference) {
+    private fun uploadDataFields(postID: String) {
         progressTextLiveData.value = "Finishing upload..."
-        apartmentModel.apartmentPostID = apartmentsDatabaseReference.push().key ?: ""
+        apartmentModel.apartmentPostID = postID
+        apartmentModel.landLordID = userID
+        apartmentModel.timeStamp = System.currentTimeMillis()
 
-        imagesReference.downloadUrl.addOnSuccessListener { downloadUrl ->
-            apartmentModel.firstImageReference = downloadUrl.toString()
-            apartmentsDatabaseReference.child(apartmentModel.apartmentPostID)
-                .setValue(apartmentModel)
-                .addOnSuccessListener {
-                    sendToastMessage("Post uploaded successfully!")
-                }
-                .addOnFailureListener {
-                    sendToastMessage(it.message.toString())
-                }
-        }
+        apartmentsDatabaseReference.child(apartmentModel.apartmentPostID)
+            .setValue(apartmentModel)
+            .addOnSuccessListener { t: Void? ->
+                sendToastMessage("Post uploaded successfully!")
+                sendAction(AddPostAction.NAVIGATE_TO_POST, homePost = apartmentModel)
+                clearFields()
+                sendAction(AddPostAction.POPULATE_FIELDS)
+            }
+            .addOnFailureListener {
+                sendToastMessage(it.message.toString())
+            }
         changeProgressBarStatus(View.GONE)
     }
 
-    private fun getAmountOfFilledImages(): Int {
+    fun getAmountOfFilledImages(): Int {
         var count = 0
         for (image in imagesArray) {
             if (image.filledIn) {
@@ -359,9 +352,10 @@ class AddPostFragmentViewModel @Inject constructor(
         }
     }
 
-    private fun updatePickerTV(pickerFloor: String, pickerRooms: String) = viewModelScope.launch {
-        addPostFragmentEventChannel.send(UpdatePickerTV(pickerFloor, pickerRooms))
-    }
+    private fun updatePickerTV(pickerFloor: String, pickerRooms: String) =
+        viewModelScope.launch {
+            addPostFragmentEventChannel.send(UpdatePickerTV(pickerFloor, pickerRooms))
+        }
 
     private fun sendToastMessage(message: String) {
         viewModelScope.launch {
@@ -383,26 +377,83 @@ class AddPostFragmentViewModel @Inject constructor(
     }
 
     private fun checkAllFieldsValidity(): Boolean {
-        if (
-            title.isEmpty() ||
+        var isError = false
+
+        sendAction(AddPostAction.TITLE_ERROR, bool = title.isEmpty())
+        sendAction(AddPostAction.ROOM_ERROR, bool = roomAmount == 0)
+        sendAction(AddPostAction.ACREAGE_ERROR, bool = acreage == 0.0)
+        sendAction(AddPostAction.LAT_LNG_ERROR, bool = latLng == null)
+        sendAction(AddPostAction.DESCRIPTION_ERROR, bool = description.isEmpty())
+        sendAction(AddPostAction.PRICE_ERROR, bool = price == 0)
+        sendAction(
+            AddPostAction.FLOOR_ERROR,
+            bool = (aptTypeValue == APT_TYPE_FLAT && floorValue == 0)
+        )
+        sendAction(AddPostAction.IMAGES_ERROR, bool = getAmountOfFilledImages() == 0)
+
+        if (title.isEmpty() ||
             roomAmount == 0 ||
             acreage == 0.0 ||
-            city.isEmpty() ||
-            address.isEmpty() ||
+            latLng == null ||
             description.isEmpty() ||
-            price == 0
-        ) sendToastMessage("Please fill in all the blanks!")
-        else if (aptTypeValue == APT_TYPE_FLAT && floorValue == 0) sendToastMessage("Please fill in all the blanks!")
-        else if (getAmountOfFilledImages() == 0) sendToastMessage("Please upload at least one picture!")
-        else return true
+            price == 0 ||
+            (aptTypeValue == APT_TYPE_FLAT && floorValue == 0) ||
+            getAmountOfFilledImages() == 0
+        ) isError = true
 
-        return false
+        return !isError
     }
 
-    data class AddPostEvent(val actionType: AddPostAction, val num: Int? = null)
+    data class AddPostEvent(
+        val actionType: AddPostAction,
+        val num: Int? = null,
+        val bool: Boolean? = null,
+        val string: String? = null,
+        val homePost: ApartmentHomePost? = null,
+    )
+
+    private fun sendAction(
+        type: AddPostAction,
+        num: Int? = null,
+        bool: Boolean? = null,
+        string: String? = null,
+        homePost: ApartmentHomePost? = null
+    ) {
+        action.set(AddPostEvent(type, num, bool, string, homePost))
+    }
+
+    fun clearFields() {
+        apartmentModel = ApartmentHomePost()
+        apartmentModel.landLordID = userID
+        title = ""
+        aptTypeValue = APT_TYPE_FLAT
+        floorValue = 0
+        roomAmount = 0
+        furnishedValue = false
+        acreage = 0.0
+        latLng = null
+        countryCode = ""
+        description = ""
+        price = 0
+        priceType = 0
+        scrollPositionY = 0
+        imagesArray = arrayListOf()
+        isImagesArrayInitialized = false
+    }
 
     enum class AddPostAction {
-        ADAPTER_CHANGED
+        TITLE_ERROR,
+        ROOM_ERROR,
+        ACREAGE_ERROR,
+        LAT_LNG_ERROR,
+        DESCRIPTION_ERROR,
+        PRICE_ERROR,
+        FLOOR_ERROR,
+        IMAGES_ERROR,
+        ADAPTER_CHANGED,
+        NAVIGATE_TO_POST,
+        POPULATE_FIELDS,
+        NETWORK_ERROR
     }
 
 }

@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.data.ChatListItem
 import com.cloudlevi.ping.databinding.ItemChatBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.*
 
 class ChatsAdapter(val vm: ChatsViewModel) : RecyclerView.Adapter<ChatsAdapter.ChatsViewHolder>() {
@@ -86,16 +87,14 @@ class ChatsAdapter(val vm: ChatsViewModel) : RecyclerView.Adapter<ChatsAdapter.C
                     View.VISIBLE
                 }
 
-                val downloadURL = chatListItem.userModel?.imageUrl?.trim()
-
                 animateOnlineStatus(binding.statusCircle, chatListItem.userModel?.userOnline?: false)
 
-                if (!downloadURL.isNullOrEmpty())
-                    Glide.with(itemView.context)
-                        .load(downloadURL)
-                        .centerCrop()
-                        .into(profileImage)
-                else profileImage.setImageResource(R.drawable.ic_account_24)
+                GlideApp.with(itemView.context)
+                    .load(vm.storageRefFromString(chatListItem.userModel?.imageRefString))
+                    .centerCrop()
+                    .placeholder(R.drawable.ic_profile_picture)
+                    .error(R.drawable.ic_profile_picture)
+                    .into(profileImage)
             }
         }
 

@@ -20,6 +20,7 @@ import com.cloudlevi.ping.BaseFragment
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.data.RentalMode
 import com.cloudlevi.ping.databinding.FragmentYourBookingsBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.LockableLLManager
 import com.cloudlevi.ping.ext.removeAnimations
 import com.cloudlevi.ping.ext.toggleAllViewsEnabled
@@ -29,6 +30,7 @@ import com.cloudlevi.ping.ui.userChat.UserChatAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import com.cloudlevi.ping.ui.yourBookings.YourBookingsViewModel.ActionType.*
 import com.cloudlevi.ping.ui.yourBookings.YourBookingsViewModel.Action
+import com.google.firebase.storage.StorageReference
 import com.stfalcon.imageviewer.StfalconImageViewer
 import java.util.concurrent.locks.Lock
 
@@ -94,9 +96,11 @@ class YourBookingsFragment : BaseFragment<FragmentYourBookingsBinding>
 
         val imagesList = viewModel.bookingsList[listPos].aImagesList
 
-        val imageLoader: (view: ImageView, image: Uri) -> Unit = { view, image ->
-            Glide.with(view.context)
-                .load(image)
+        val imageLoader: (view: ImageView, imgRef: StorageReference) -> Unit = { view, imgRef ->
+            GlideApp.with(view.context)
+                .load(imgRef)
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
                 .into(view)
         }
         val imageChangeListener: (pos: Int) -> Unit = { pos ->

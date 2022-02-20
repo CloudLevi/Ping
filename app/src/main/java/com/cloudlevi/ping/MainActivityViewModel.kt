@@ -1,5 +1,6 @@
 package com.cloudlevi.ping
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -39,8 +40,9 @@ class MainActivityViewModel @Inject constructor(
     fun setUserOnline(isOnline: Boolean) {
         viewModelScope.launch {
             val userID = dataStoreManager.getUserID()
-
-            usersRef.child(userID).child("userOnline").setValue(isOnline)
+            Log.d("TAG", "setUserOnline: $isOnline, userID: $userID")
+            if(userID.trim().isNotEmpty())
+                usersRef.child(userID).child("userOnline").setValue(isOnline)
         }
     }
 }

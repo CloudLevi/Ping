@@ -165,4 +165,17 @@
     <string name="price_range">Zakres cenowy:</string>
     <string name="apply_filters">Zastosuj filtry</string>
     <string name="special_wishes_">Życzenia:</string>
+    <string name="title">Nazwa</string>
+    <string name="choose_the_location">Wybierz lokalizację:</string>
+    <string name="please_select_location">Wybierz lokalizację</string>
+    <string name="please_choose_a_location_error">Podaj lokalizację</string>
+    <string name="please_enter_the_title">Podaj nazwę</string>
+    <string name="please_specify_the_floor">Podaj poziom</string>
+    <string name="please_enter_the_amount_of_rooms">Podaj ilość pokoi</string>
+    <string name="please_enter_the_price">Podaj cenę</string>
+    <string name="please_provide_description">Podaj opis lokalu</string>
+    <string name="please_specify_the_acreage">Podaj powierzcznię</string>
+    <string name="at_least_one_image_is_required">Podaj co najmniej jedno zdjęcie</string>
+    <string name="network_error_message">Błąd sieci. Sprawdź dostęp do sieci i spróbuj później.</string>
+    <string name="hello_user">Cześć, %1$s</string>
 </resources>

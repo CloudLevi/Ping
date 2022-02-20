@@ -1,22 +1,26 @@
 package com.cloudlevi.ping.ui.userPosts
 
-import android.content.ContentValues
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.ApartmentHomePost
-import com.cloudlevi.ping.databinding.ApartmentPostGridviewItemBinding
 import com.cloudlevi.ping.databinding.ApartmentPostListviewItemBinding
+import com.cloudlevi.ping.di.GlideApp
+import com.cloudlevi.ping.ext.getAddress
+import com.cloudlevi.ping.ext.getStreet
 import com.google.android.material.shape.CornerFamily
+import com.google.firebase.storage.FirebaseStorage
 import java.text.DecimalFormat
 
 class UserPostsAdapter(
     var apartmentList: ArrayList<ApartmentHomePost>,
     private val listener: OnPostClickedListener
 ) : RecyclerView.Adapter<UserPostsAdapter.UserListsViewHolder>() {
+
+    private val fileStorageReference =
+        FirebaseStorage.getInstance().getReference("ApartmentUploads")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserListsViewHolder {
         return UserListsViewHolder(
@@ -43,7 +47,7 @@ class UserPostsAdapter(
         fun bind(aptPost: ApartmentHomePost) {
 
             val df = DecimalFormat("#.#")
-            val locationString = aptPost.city + ", " + aptPost.address
+            val locationString = aptPost.createLatLng().getAddress(itemView.context)
             var priceType = ""
             var apartmentDrawable = 0
             when (aptPost.priceType) {
@@ -58,16 +62,24 @@ class UserPostsAdapter(
             binding.apply {
                 titleTextView.text = aptPost.title
                 locationTextView.text = locationString
-                priceTextView.text = aptPost.getPricingText()
+                priceTextView.text = aptPost.mGetPricingText()
                 priceTypeTextView.text = priceType
                 apartmentType.setImageResource(apartmentDrawable)
                 ratingTextView.text = df.format(aptPost.calculateAverageRating())
 
-                Glide.with(itemView)
-                    .load(aptPost.firstImageReference)
-                    .centerCrop()
-                    .placeholder(R.drawable.progress_animation_small)
-                    .into(aptImageView)
+                if (aptPost.firstImageReference.isNullOrEmpty()){
+                    GlideApp.with(itemView)
+                        .load(fileStorageReference.child(aptPost.apartmentPostID).child("0"))
+                        .centerCrop()
+                        .into(aptImageView)
+                } else {
+                    //legacy code
+                    Glide.with(itemView)
+                        .load(aptPost.firstImageReference)
+                        .centerCrop()
+                        //.placeholder(R.drawable.progress_animation_small)
+                        .into(aptImageView)
+                }
 
                 aptImageView.shapeAppearanceModel = aptImageView.shapeAppearanceModel.toBuilder()
                     .setAllCorners(CornerFamily.ROUNDED, 20f)

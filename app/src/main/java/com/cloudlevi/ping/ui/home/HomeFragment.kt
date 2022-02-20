@@ -1,5 +1,6 @@
 package com.cloudlevi.ping.ui.home
 
+import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,16 +23,16 @@ import com.cloudlevi.ping.databinding.FragmentHomeBinding
 import com.cloudlevi.ping.ext.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
-import com.cloudlevi.ping.ui.home.HomeFragmentViewModel.Action
-import com.cloudlevi.ping.ui.home.HomeFragmentViewModel.ActionType.*
-import java.lang.RuntimeException
+import com.cloudlevi.ping.ui.home.HomeViewModel.Action
+import com.cloudlevi.ping.ui.home.HomeViewModel.ActionType.*
+import java.util.*
 
 @AndroidEntryPoint
 class HomeFragment :
     BaseFragment<FragmentHomeBinding>
         (R.layout.fragment_home, true), PostsAdapter.OnPostClickedListener {
 
-    private val viewModel: HomeFragmentViewModel by activityViewModels()
+    private val viewModel: HomeViewModel by activityViewModels()
     private lateinit var binding: FragmentHomeBinding
     private lateinit var postsAdapter: PostsAdapter
     private val listener = this
@@ -66,7 +67,7 @@ class HomeFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        postsAdapter = PostsAdapter(viewModel.listType, listener)
+        postsAdapter = PostsAdapter(viewModel.listType, listener, Geocoder(requireContext(), Locale.getDefault()))
 
         updateViewButtonSrc()
 
@@ -81,7 +82,7 @@ class HomeFragment :
             changeLayoutManager.setOnClickListener {
                 viewModel.listTypeChanged()
 
-                postsAdapter = PostsAdapter(viewModel.listType, listener)
+                postsAdapter = PostsAdapter(viewModel.listType, listener, Geocoder(requireContext(), Locale.getDefault()))
                 updateViewButtonSrc()
                 postsAdapter.submitList(viewModel.displayedApartments)
 
@@ -193,8 +194,9 @@ class HomeFragment :
 
             changeProgressStatus(View.GONE)
 
-            if (overrideNothingFound) nothingFoundTV.makeGone()
-            else nothingFoundTV.visibleOrGone(viewModel.displayedApartments.isNullOrEmpty())
+//            if (overrideNothingFound) nothingFoundTV.makeGone()
+//            else
+                nothingFoundTV.visibleOrGone(viewModel.displayedApartments.isNullOrEmpty())
         }
     }
 
@@ -213,14 +215,6 @@ class HomeFragment :
 
 
     private fun changeProgressStatus(status: Int) {
-//        binding.progressBar.visibility = status
-//
-//        when (status) {
-//            View.GONE -> binding.mainRelativeLayout.foreground = null
-//            View.VISIBLE -> binding.mainRelativeLayout.foreground =
-//                ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
-//        }
-
         val isLoading = status == View.VISIBLE
         (requireActivity() as MainActivity).switchLoading(isLoading)
         toggleAllViewsEnabled(!isLoading, binding.root)
@@ -233,6 +227,10 @@ class HomeFragment :
     }
 
     override fun onItemClickedListener(pos: Int) {
+        if (!hasInternet()) {
+            sendLongToast(R.string.network_error_message)
+            return
+        }
         val action = HomeFragmentDirections
             .actionHomeFragmentToApartmentPageFragment(viewModel.displayedApartments[pos])
         findNavController().navigate(action)

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -90,54 +91,54 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Payment type: Monthly"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Payment type: Monthly" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/furnishedTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Furnishing: Yes"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Furnishing: Yes" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/floorTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Floor: 12"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Floor: 12" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/roomTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Rooms: 12"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Rooms: 12" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/aptTypeTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Apartment type: House"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Apartment type: House" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/acreageTV"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    tools:text="Acreage: 58.6"
                     android:textColor="@color/text_color"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Acreage: 58.6" />
 
             </com.google.android.material.chip.ChipGroup>
 
@@ -165,10 +166,14 @@
 
             <TextView
                 android:id="@+id/locationTV"
-                android:layout_width="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/ripple_simple_bg"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
                 android:drawablePadding="2dp"
                 android:textColor="@color/text_color"
                 android:textSize="14sp"
@@ -178,10 +183,10 @@
 
             <TextView
                 android:id="@+id/ratingTV"
+                style="@style/RegularTextStyleMargins"
                 android:layout_marginTop="4dp"
                 app:drawableStartCompat="@drawable/ic_star"
-                tools:text="4.0 from 24 reviews"
-                style="@style/RegularTextStyleMargins"/>
+                tools:text="4.0 from 24 reviews" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -259,21 +264,27 @@
 
             </LinearLayout>
 
+            <com.cloudlevi.ping.view.CustomMapView
+                android:id="@+id/mapView"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginBottom="16dp" />
+
             <TextView
                 android:id="@+id/reviewsTV"
-                android:textSize="22sp"
+                style="@style/BoldTextStyle"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:text="@string/reviews_"
-                style="@style/BoldTextStyle"/>
+                android:textSize="22sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/reviewRecycler"
-                android:overScrollMode="never"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="vertical"
+                android:overScrollMode="never"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/item_review" />
 

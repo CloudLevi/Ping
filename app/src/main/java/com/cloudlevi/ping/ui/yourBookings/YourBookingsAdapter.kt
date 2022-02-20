@@ -6,10 +6,10 @@ import android.view.ViewGroup
 import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.data.BookingModel
 import com.cloudlevi.ping.databinding.ItemYourBookingBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.*
 import com.cloudlevi.ping.ui.userChat.MessageMediaAdapter
 
@@ -95,8 +95,8 @@ class YourBookingsAdapter(val vm: YourBookingsViewModel) :
                 specialWishesLayout.visibleOrGone(!b.extraInfo.isNullOrEmpty())
 
                 val checkInText = ((b.checkInDate ?: 0) + (b.checkInTime ?: 0)).showDateTime()
-                val totalText = b.getPricingText()
-                val cityCountryText = "${b.aCity}, ${b.aCountry}"
+                val totalText = b.mGetPricingText()
+                val cityCountryText = b.aLatLng?.getCityCountry(itemView.context)
                 val acreageText = String.format(root.context.getString(R.string.m2), b.aAcreage)
 
                 statusTV.text = b.parsePaymentStatusText(itemView.context)
@@ -104,7 +104,7 @@ class YourBookingsAdapter(val vm: YourBookingsViewModel) :
                 checkInTV.text = checkInText
                 checkOutTV.text = b.checkOutDate?.showDateTime()
                 priceTV.text = totalText
-                locationTV.text = b.aLocation
+                locationTV.text = b.aLatLng?.getAddress(itemView.context)
                 cityTV.text = cityCountryText
                 acreageTV.text = HtmlCompat.fromHtml(acreageText, HtmlCompat.FROM_HTML_MODE_LEGACY)
                 roomCountTV.text = b.roomCountString(root.context)
@@ -115,15 +115,12 @@ class YourBookingsAdapter(val vm: YourBookingsViewModel) :
                 landLordName.text = b.landLordDisplayName
                 landLordUserName.text = b.landLordUserName
 
-                if (b.landLordImageURL.isNullOrEmpty())
-                    profileImage.setImageResource(R.drawable.ic_profile_picture)
-                else {
-                    Glide.with(root.context)
-                        .load(b.landLordImageURL)
-                        .into(profileImage)
-                }
+                GlideApp.with(root.context)
+                    .load(vm.getUserImageRef(b.landlordID))
+                    .error(R.drawable.ic_profile_picture)
+                    .into(profileImage)
 
-                if (b.aImagesList?.size ?: 0 > 1) {
+                if (b.aImagesList.size > 1) {
                     val initialText = "1/${b.aImagesList?.size?:0}"
                     counterTV.text = initialText
                     counterTV.makeVisible()

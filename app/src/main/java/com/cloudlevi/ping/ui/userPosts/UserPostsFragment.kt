@@ -124,9 +124,10 @@ class UserPostsFragment :
             userInfoLayout.makeVisible()
 
             Glide.with(requireContext())
-                .load(userModel.imageUrl)
+                .load(viewModel.getOtherUserImageRef())
                 .centerCrop()
-                .placeholder(R.drawable.progress_animation_small)
+                .error(R.drawable.ic_profile_picture)
+                .placeholder(R.drawable.ic_profile_picture)
                 .into(profileImage)
         }
     }

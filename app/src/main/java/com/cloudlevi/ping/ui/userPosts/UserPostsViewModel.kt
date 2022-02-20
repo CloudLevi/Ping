@@ -19,6 +19,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.cloudlevi.ping.ui.userPosts.UserPostsEvent.*
+import com.google.android.gms.auth.api.signin.internal.Storage
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
@@ -32,6 +35,8 @@ class UserPostsViewModel @Inject constructor(
 
     private val databaseApartments = Firebase.database.reference.child("apartments")
     private val usersRef = Firebase.database.reference.child("users")
+
+    private val storageInstance = FirebaseStorage.getInstance()
 
     var currentUserID = ""
     var currentUserLists = listOf<ApartmentHomePost>()
@@ -77,7 +82,7 @@ class UserPostsViewModel @Inject constructor(
         usersRef.child(userID).addListenerForSingleValueEvent(object : SimpleEventListener() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 super.onDataChange(snapshot)
-                otherUserModel = snapshot.getValue(User::class.java)
+                otherUserModel = User.createFromSnapshot(snapshot, storageInstance.reference)
 
                 displayUserInfo(otherUserModel)
                 listenToPosts(userID)
@@ -102,6 +107,11 @@ class UserPostsViewModel @Inject constructor(
                     sendToastMessage("Error loading posts")
                 }
             })
+    }
+
+    fun getOtherUserImageRef(): StorageReference? {
+        val imgRef = otherUserModel?.imageRefString?: return null
+        return storageInstance.getReferenceFromUrl(imgRef)
     }
 
     private fun sendToastMessage(message: String) =

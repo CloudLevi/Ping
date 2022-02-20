@@ -1,24 +1,18 @@
 package com.cloudlevi.ping.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.cloudlevi.ping.APT_FURNISHED_ALL
 import com.cloudlevi.ping.APT_TYPE_ALL
 import com.cloudlevi.ping.PRICE_TYPE_ALL
+import com.cloudlevi.ping.ext.ActionLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.cloudlevi.ping.ui.home.FiltersFragmentEvent.*
-import kotlinx.coroutines.flow.receiveAsFlow
 
 @HiltViewModel
 class FiltersViewModel @Inject constructor(
-): ViewModel() {
+) : ViewModel() {
 
-    private val filtersFragmentEventChannel = Channel<FiltersFragmentEvent>()
-    var filtersFragmentEvent = filtersFragmentEventChannel.receiveAsFlow()
+    val action = ActionLiveData<Action>()
 
     var sort_type: Int = -1
     var apt_type: Int = APT_TYPE_ALL
@@ -42,43 +36,43 @@ class FiltersViewModel @Inject constructor(
         else rent_type.add(id)
     }
 
-    fun getRatings(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+    fun getRatings(sliderMin: Float, sliderMax: Float): Pair<Float, Float> {
         val range = sliderMin..sliderMax
-        if (minRating !in range || maxRating !in range){
+        if (minRating !in range || maxRating !in range) {
             minRating = sliderMin
             maxRating = sliderMax
         }
         return Pair(minRating, maxRating)
     }
 
-    fun getFloors(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+    fun getFloors(sliderMin: Float, sliderMax: Float): Pair<Float, Float> {
         val range = sliderMin..sliderMax
-        if (minFloor !in range || maxFloor !in range){
+        if (minFloor !in range || maxFloor !in range) {
             minFloor = sliderMin
             maxFloor = sliderMax
         }
         return Pair(minFloor, maxFloor)
     }
 
-    fun getRooms(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+    fun getRooms(sliderMin: Float, sliderMax: Float): Pair<Float, Float> {
         val range = sliderMin..sliderMax
-        if (minRooms !in range || maxRooms !in range){
+        if (minRooms !in range || maxRooms !in range) {
             minRooms = sliderMin
             maxRooms = sliderMax
         }
         return Pair(minRooms, maxRooms)
     }
 
-    fun getPrice(sliderMin: Float, sliderMax: Float): Pair<Float, Float>{
+    fun getPrice(sliderMin: Float, sliderMax: Float): Pair<Float, Float> {
         val range = sliderMin..sliderMax
-        if (minPrice !in range || maxPrice !in range){
+        if (minPrice !in range || maxPrice !in range) {
             minPrice = sliderMin
             maxPrice = sliderMax
         }
         return Pair(minPrice, maxPrice)
     }
 
-    fun resetFilters(totalMaxFloor: Float, totalMaxRooms: Float, totalMaxPrice: Float){
+    fun resetFilters(totalMaxFloor: Float, totalMaxRooms: Float, totalMaxPrice: Float) {
         sort_type = -1
         apt_type = APT_TYPE_ALL
         furniture_type = APT_FURNISHED_ALL
@@ -95,11 +89,11 @@ class FiltersViewModel @Inject constructor(
         updateUI()
     }
 
-    private fun updateUI() = viewModelScope.launch {
-        filtersFragmentEventChannel.send(UpdateUI)
-    }
-}
+    private fun updateUI() = action.set(Action(ActionType.UPDATE_UI))
 
-sealed class FiltersFragmentEvent{
-    object UpdateUI: FiltersFragmentEvent()
+    data class Action(val type: ActionType)
+
+    enum class ActionType {
+        UPDATE_UI
+    }
 }

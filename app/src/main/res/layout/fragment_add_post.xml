@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_main"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:background="@color/bg_main">
+
     <ScrollView
         android:id="@+id/fragmentAddPostScrollView"
         android:layout_width="match_parent"
-        android:overScrollMode="never"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/mainRelativeLayout"
             android:layout_width="match_parent"
-            android:paddingTop="16dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:animateLayoutChanges="true"
+            android:orientation="vertical"
+            android:paddingTop="16dp"
             android:paddingBottom="8dp">
 
             <TextView
@@ -27,14 +32,14 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/titleLayout"
                 android:layout_width="match_parent"
-                android:layout_below="@id/addAnApartmentTV"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
                 android:padding="0dp"
+                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusBottomEnd="20dp"
                 app:boxCornerRadiusBottomStart="20dp"
                 app:boxCornerRadiusTopEnd="20dp"
-                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusTopStart="20dp"
                 app:boxStrokeWidth="0dp"
                 app:boxStrokeWidthFocused="0dp">
@@ -48,31 +53,39 @@
                     android:maxLength="70"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
+
                 <TextView
                     android:id="@+id/titleCharacterCount"
-                    android:layout_gravity="end"
-                    tools:text="22/70"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="4dp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="8dp"
+                    tools:text="22/70" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/titleError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_enter_the_title"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/typeChoiceLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/titleLayout"
-                android:layout_centerHorizontal="true"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/aptTypeChoiceFlatButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@color/buttonColorActive"
                     android:layout_margin="8dp"
+                    android:backgroundTint="@color/buttonColorActive"
                     android:text="@string/it_s_a_flat"
                     android:textSize="16sp" />
 
@@ -91,8 +104,7 @@
                 android:id="@+id/floorPickerLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/typeChoiceLayout"
-                android:layout_margin="16dp">
+                android:layout_marginTop="16dp">
 
                 <TextView
                     android:id="@+id/floorPickerTV"
@@ -103,17 +115,24 @@
                     android:textColor="@color/text_color"
                     android:textSize="20sp" />
 
-                <include layout="@layout/custom_number_picker"
-                    android:id="@+id/floorCustomPicker"/>
+                <include
+                    android:id="@+id/floorCustomPicker"
+                    layout="@layout/custom_number_picker" />
 
             </FrameLayout>
+
+            <TextView
+                android:id="@+id/floorError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_specify_the_floor"
+                android:visibility="gone" />
 
             <FrameLayout
                 android:id="@+id/roomAmountPickerLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/floorPickerLayout"
-                android:layout_margin="16dp">
+                android:layout_marginTop="16dp">
 
                 <TextView
                     android:id="@+id/roomPickerTV"
@@ -124,17 +143,24 @@
                     android:textColor="@color/text_color"
                     android:textSize="20sp" />
 
-                <include layout="@layout/custom_number_picker"
-                    android:id="@+id/roomCustomPicker"/>
+                <include
+                    android:id="@+id/roomCustomPicker"
+                    layout="@layout/custom_number_picker" />
 
             </FrameLayout>
+
+            <TextView
+                android:id="@+id/roomError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_enter_the_amount_of_rooms"
+                android:visibility="gone" />
 
             <FrameLayout
                 android:id="@+id/furnishingLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/roomAmountPickerLayout"
-                android:layout_margin="16dp">
+                android:layout_marginTop="16dp">
 
                 <TextView
                     android:id="@+id/furnishingTV"
@@ -156,16 +182,56 @@
 
             </FrameLayout>
 
+            <LinearLayout
+                android:id="@+id/locationLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/ripple_simple_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_baseline_location_on_24"
+                    app:tint="@color/buttonColorActive" />
+
+                <TextView
+                    android:id="@+id/locationTV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center_vertical"
+                    android:minHeight="32dp"
+                    android:text="@string/please_select_location"
+                    android:textColor="@color/text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/locationError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_choose_a_location_error"
+                android:visibility="gone" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/acreageLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/furnishingLayout"
-                android:layout_margin="16dp"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusBottomEnd="20dp"
                 app:boxCornerRadiusBottomStart="20dp"
                 app:boxCornerRadiusTopEnd="20dp"
-                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusTopStart="20dp"
                 app:boxStrokeWidth="0dp"
                 app:boxStrokeWidthFocused="0dp">
@@ -181,99 +247,53 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/cityLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/acreageLayout"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
-                android:layout_marginBottom="16dp"
-                app:boxCornerRadiusBottomEnd="20dp"
-                app:boxCornerRadiusBottomStart="20dp"
-                app:boxCornerRadiusTopEnd="20dp"
-                app:boxCornerRadiusTopStart="20dp"
-                app:boxStrokeWidth="0dp"
-                app:boxBackgroundColor="@color/bg_helper"
-                app:boxStrokeWidthFocused="0dp">
-
-                <EditText
-                    android:id="@+id/cityEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/please_enter_the_city"
-                    android:inputType="text"
-                    android:textColor="@color/black"
-                    android:textSize="16sp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/addressLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/cityLayout"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
-                android:layout_marginBottom="16dp"
-                app:boxCornerRadiusBottomEnd="20dp"
-                app:boxCornerRadiusBottomStart="20dp"
-                app:boxCornerRadiusTopEnd="20dp"
-                app:boxCornerRadiusTopStart="20dp"
-                app:boxStrokeWidth="0dp"
-                app:boxBackgroundColor="@color/bg_helper"
-                app:boxStrokeWidthFocused="0dp">
-
-                <EditText
-                    android:id="@+id/addressEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/please_enter_the_address"
-                    android:inputType="text"
-                    android:textColor="@color/black"
-                    android:textSize="16sp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/acreageError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_specify_the_acreage"
+                android:visibility="gone" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/descriptionLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/addressLayout"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusBottomEnd="20dp"
                 app:boxCornerRadiusBottomStart="20dp"
                 app:boxCornerRadiusTopEnd="20dp"
                 app:boxCornerRadiusTopStart="20dp"
                 app:boxStrokeWidth="0dp"
-                app:boxBackgroundColor="@color/bg_helper"
                 app:boxStrokeWidthFocused="0dp">
 
                 <EditText
                     android:id="@+id/descriptionEditText"
                     android:layout_width="match_parent"
-                    android:maxLines="5"
                     android:layout_height="wrap_content"
                     android:hint="@string/please_describe_your_apartment"
                     android:inputType="textMultiLine"
+                    android:maxLines="5"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:id="@+id/descriptionError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_provide_description"
+                android:visibility="gone" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/priceInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/descriptionLayout"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusBottomEnd="20dp"
                 app:boxCornerRadiusBottomStart="20dp"
-                app:boxBackgroundColor="@color/bg_helper"
                 app:boxCornerRadiusTopEnd="20dp"
                 app:boxCornerRadiusTopStart="20dp"
                 app:boxStrokeWidth="0dp"
@@ -290,77 +310,107 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <LinearLayout
-                android:id="@+id/priceTypeLayout"
+            <TextView
+                android:id="@+id/priceError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/please_enter_the_price"
+                android:visibility="gone" />
+
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/priceInputLayout"
-                android:layout_centerHorizontal="true"
-                android:orientation="horizontal">
+                android:layout_marginTop="8dp"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:layout_marginBottom="8dp"
+                android:layout_height="wrap_content">
 
-                <Button
-                    android:id="@+id/priceTypeDayBTN"
+                <LinearLayout
+                    android:id="@+id/priceTypeLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
-                    android:text="@string/per_day"
-                    android:backgroundTint="@color/buttonColorActive"
-                    android:textSize="12sp" />
-                <Button
-                    android:id="@+id/priceTypeWeekBTN"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
-                    android:backgroundTint="@color/buttonColorActive"
-                    android:text="@string/per_week"
-                    android:textSize="12sp" />
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/priceTypeMonthBTN"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@color/buttonColorActive"
-                    android:layout_margin="8dp"
-                    android:text="@string/per_month"
-                    android:textSize="12sp" />
+                    <Button
+                        android:id="@+id/priceTypeDayBTN"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="@color/buttonColorActive"
+                        android:text="@string/per_day"
+                        android:textSize="12sp" />
 
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/priceTypeWeekBTN"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="@color/buttonColorActive"
+                        android:text="@string/per_week"
+                        android:textSize="12sp" />
+
+                    <Button
+                        android:id="@+id/priceTypeMonthBTN"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="@color/buttonColorActive"
+                        android:text="@string/per_month"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/imagesAddRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/priceTypeLayout" />
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/imagesError"
+                style="@style/ErrorStyle"
+                android:layout_marginTop="4dp"
+                android:text="@string/at_least_one_image_is_required"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/uploadButton"
-                android:backgroundTint="@color/buttonColorActive"
-                android:text="@string/upload_apartment"
-                android:layout_below="@id/imagesAddRecyclerView"
-                android:layout_centerHorizontal="true"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:backgroundTint="@color/buttonColorActive"
+                android:text="@string/upload_apartment" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
     </ScrollView>
 
-    <ProgressBar
-        android:id="@+id/addFragmentProgressBar"
+    <FrameLayout
+        android:id="@+id/progressLayout"
         android:visibility="gone"
-        android:layout_gravity="center"
-        android:foregroundGravity=""
-        android:layout_width="48dp"
-        android:layout_height="48dp"/>
-    <TextView
-        android:id="@+id/progressTV"
-        android:visibility="gone"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginTop="36dp"
-        tools:text="Uploading..."
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_transparent">
+
+        <ProgressBar
+            android:id="@+id/addFragmentProgressBar"
+            android:layout_gravity="center"
+            android:layout_width="48dp"
+            android:layout_height="48dp" />
+
+        <TextView
+            android:id="@+id/progressTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="36dp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            tools:text="Uploading..." />
+
+    </FrameLayout>
 
 </FrameLayout>

@@ -12,6 +12,8 @@ import com.cloudlevi.ping.data.PreferencesManager
 import com.cloudlevi.ping.data.User
 import com.cloudlevi.ping.ext.SimpleEventListener
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -28,6 +30,8 @@ class ChatsViewModel @Inject constructor(
     private val allChatsRef = FirebaseDatabase.getInstance().getReference("chats")
     private val chatsIndexRef = FirebaseDatabase.getInstance().getReference("chatIndex")
     private val usersRef = FirebaseDatabase.getInstance().getReference("users")
+
+    private val storageInstance = FirebaseStorage.getInstance()
 
     private val eventChannel = Channel<UserChatsEvent>()
     val userChatsEvent = eventChannel.receiveAsFlow()
@@ -56,7 +60,7 @@ class ChatsViewModel @Inject constructor(
             currentUserChatsQuery = chatsIndexRef
                 .orderByChild("users")
                 .startAt("%$userID%")
-                //.endAt("$userID\uf8ff")
+            //.endAt("$userID\uf8ff")
         }
     }
 
@@ -105,7 +109,7 @@ class ChatsViewModel @Inject constructor(
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
 
-                            val otherUserModel = snapshot.getValue(User::class.java)
+                            val otherUserModel = User.createFromSnapshot(snapshot, storageInstance.reference)
                             chatItem.userModel = otherUserModel
                             val uID = otherUserModel?.userID ?: ""
 
@@ -164,7 +168,8 @@ class ChatsViewModel @Inject constructor(
             val chatIndex = allChats.indexOfFirst {
                 it?.userModel?.userID == snapshot.key
             }
-            allChats.getOrNull(chatIndex)?.userModel = snapshot.getValue(User::class.java)
+            allChats.getOrNull(chatIndex)?.userModel =
+                User.createFromSnapshot(snapshot, storageInstance.reference)
 
             allChats.getOrNull(chatIndex) ?: return
             chatsAdapter.updateSoft(chatIndex)
@@ -203,6 +208,11 @@ class ChatsViewModel @Inject constructor(
 
     private fun sendMessage(message: String) = viewModelScope.launch {
         eventChannel.send(UserChatsEvent.SendMessage(message))
+    }
+
+    fun storageRefFromString(imgRefString: String?): StorageReference? {
+        imgRefString ?: return null
+        return storageInstance.getReferenceFromUrl(imgRefString)
     }
 
     sealed class UserChatsEvent {

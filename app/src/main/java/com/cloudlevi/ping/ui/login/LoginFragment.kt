@@ -12,14 +12,11 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.view.iterator
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.cloudlevi.ping.*
-import com.cloudlevi.ping.databinding.FragmentHomeBinding
 import com.cloudlevi.ping.databinding.FragmentLoginBinding
 import com.cloudlevi.ping.ui.login.LoginFragmentDirections.actionLoginFragmentToHomeFragment
 import com.cloudlevi.ping.ui.login.LoginFragmentDirections.actionLoginFragmentToRegisterFragment
@@ -31,10 +28,10 @@ import com.cloudlevi.ping.ui.login.LoginFragmentEvent.*
 import com.google.android.gms.tasks.Task
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
-
+import com.cloudlevi.ping.ui.login.ActionType.*
 
 @AndroidEntryPoint
-class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login, false) {
+class LoginFragment : BaseFragment<FragmentLoginBinding>(R.layout.fragment_login, false) {
 
     private lateinit var resultLauncher: ActivityResultLauncher<Intent>
     private val viewModel: LoginFragmentViewModel by viewModels()
@@ -43,19 +40,34 @@ class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login,
     override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentLoginBinding =
         FragmentLoginBinding::inflate
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        super.onCreateView(inflater, container, savedInstanceState)
+        binding = FragmentLoginBinding.inflate(inflater, container, false)
+
+        viewModel.action.observe(viewLifecycleOwner) {
+            val data = it.getDataSafely()?: return@observe
+            doAction(data)
+        }
+
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding = FragmentLoginBinding.bind(view)
-
 //        viewModel.checkIfLoggedIn()
 
-        resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result: ActivityResult ->
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            handleSignInResult(task)
-        }
+        resultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                handleSignInResult(task)
+            }
 
-        viewModel.setupGSO(requireActivity(), requireContext())
+        //viewModel.setupGSO(requireActivity(), requireContext())
 
         binding.apply {
             loginEditText.addTextChangedListener {
@@ -64,44 +76,33 @@ class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login,
             passwordEditText.addTextChangedListener {
                 viewModel.passwordText = it.toString().trim()
             }
-            loginButton.setOnClickListener{
-                viewModel.onLoginCLick()
+            loginButton.setOnClickListener {
+                viewModel.onLoginClick()
             }
             signUpTextView.setOnClickListener {
-                viewModel.onSignUpClick()
+                navigateToSignUpScreen()
             }
             googleSignInButton.setOnClickListener {
-                viewModel.onGoogleSignInClick()
+                //viewModel.onGoogleSignInClick()
+                changeProgressStatus(View.VISIBLE)
+                startActivityForResult(getGoogleSignInIntent())
             }
             googleSignInButton.setSize(SignInButton.SIZE_WIDE)
         }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.loginFragmentEvent.collect { event ->
-                when(event) {
+                when (event) {
                     is ShowToastMessage -> {
-                        //Snackbar.make(requireView(), event.message, Snackbar.LENGTH_LONG).show()
                         Toast.makeText(requireContext(), event.message, Toast.LENGTH_LONG).show()
-                    }
-
-                    is NavigateToSignUpScreen -> {
-                        findNavController().navigate(actionLoginFragmentToRegisterFragment())
-                    }
-
-                    is StartGoogleSignIn -> {
-                        changeProgressStatus(View.VISIBLE)
-                        startActivityForResult(event.intent)
-                    }
-
-                    is NavigateToHomeScreen -> {
-                        (requireActivity() as MainActivity).setUserOnline(true)
-                        findNavController().navigate(actionLoginFragmentToHomeFragment())
                     }
 
                     is RequestErrorField -> {
                         binding.apply {
-                            if(event.request_id == REQUEST_ERROR_EMAIL_FIELD) loginEditText.error = "Error"
-                            if(event.request_id == REQUEST_ERROR_PASSWORD_FIELD) passwordEditText.error = "Error"
+                            if (event.request_id == REQUEST_ERROR_EMAIL_FIELD) loginEditText.error =
+                                "Error"
+                            if (event.request_id == REQUEST_ERROR_PASSWORD_FIELD) passwordEditText.error =
+                                "Error"
                         }
                     }
                     is ChangeProgress -> {
@@ -111,6 +112,15 @@ class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login,
 
             }
         }
+    }
+
+    private fun navigateToSignUpScreen() {
+        findNavController().navigate(actionLoginFragmentToRegisterFragment())
+    }
+
+    private fun navigateToHomeScreen() {
+        getMainActivity().setUserOnline(true)
+        findNavController().navigate(actionLoginFragmentToHomeFragment())
     }
 
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
@@ -123,18 +133,25 @@ class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login,
         }
     }
 
-    private fun changeProgressStatus(status: Int){
+    private fun doAction(a: Action){
+        when(a.type){
+            NAVIGATE_TO_HOME_SCREEN -> navigateToHomeScreen()
+        }
+    }
+
+    private fun changeProgressStatus(status: Int) {
         binding.apply {
             progressBar.visibility = status
 
-            when(status){
+            when (status) {
                 View.VISIBLE -> {
                     loginEditText.isEnabled = false
                     passwordEditText.isEnabled = false
                     loginButton.isEnabled = false
                     googleSignInButton.isEnabled = false
                     signUpTextView.isEnabled = false
-                    mainRelativeLayout.foreground = ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
+                    mainRelativeLayout.foreground =
+                        ContextCompat.getDrawable(requireContext(), R.color.black_transparent)
                 }
                 View.GONE -> {
                     loginEditText.isEnabled = true
@@ -148,7 +165,7 @@ class LoginFragment: BaseFragment<FragmentLoginBinding>(R.layout.fragment_login,
         }
     }
 
-    private fun startActivityForResult(intent: Intent){
+    private fun startActivityForResult(intent: Intent) {
         resultLauncher.launch(intent)
     }
 }

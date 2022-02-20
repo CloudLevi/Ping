@@ -8,7 +8,7 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_margin="8dp"
-        android:background="@drawable/button_image_selection" />
+        android:src="@drawable/button_image_selection" />
 
     <ImageView
         android:id="@+id/imageDeleteButton"

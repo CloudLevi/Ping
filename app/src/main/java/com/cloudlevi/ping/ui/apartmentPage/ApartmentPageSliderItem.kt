@@ -2,12 +2,16 @@ package com.cloudlevi.ping.ui.apartmentPage
 
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.cloudlevi.ping.R
 import com.cloudlevi.ping.databinding.ApartmentPageSliderItemBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.google.android.material.shape.CornerFamily
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 
 class ApartmentPageSliderItem: Fragment(R.layout.apartment_page_slider_item) {
 
@@ -17,11 +21,11 @@ class ApartmentPageSliderItem: Fragment(R.layout.apartment_page_slider_item) {
         const val BUNDLE_POSITION = "position"
         const val BUNDLE_IMAGE_URL= "image_url"
 
-        fun getInstance(position: Int, imageUrl: Uri): Fragment {
+        fun getInstance(position: Int, imageReference: StorageReference): Fragment {
             val apartmentPageSliderItem = ApartmentPageSliderItem()
             val bundle = Bundle()
             bundle.putInt(BUNDLE_POSITION, position)
-            bundle.putString(BUNDLE_IMAGE_URL, imageUrl.toString())
+            bundle.putString(BUNDLE_IMAGE_URL, imageReference.toString())
             apartmentPageSliderItem.arguments = bundle
 
             return apartmentPageSliderItem
@@ -34,13 +38,17 @@ class ApartmentPageSliderItem: Fragment(R.layout.apartment_page_slider_item) {
         binding = ApartmentPageSliderItemBinding.bind(view)
 
         val position = requireArguments().getInt(BUNDLE_POSITION, 0)
-        val imageUrl = requireArguments().getString(BUNDLE_IMAGE_URL)
+        val imageUrl = requireArguments().getString(BUNDLE_IMAGE_URL)?: ""
 
+        val storageRef = FirebaseStorage.getInstance().getReferenceFromUrl(imageUrl)
+
+
+        Log.d("TAG", "onViewCreated imageUrl: $storageRef")
         binding.apply {
-            Glide.with(view)
-                .load(imageUrl)
+            GlideApp.with(view)
+                .load(storageRef)
                 .centerCrop()
-                .placeholder(R.drawable.progress_animation_small)
+                //.placeholder(R.drawable.progress_animation_small)
                 .into(sliderImageView)
 
                 sliderImageView.shapeAppearanceModel = sliderImageView.shapeAppearanceModel.toBuilder()

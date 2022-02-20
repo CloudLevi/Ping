@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name" translatable="false">Ping</string>
-    <string name="google_client_id" translatable="false">407708783580-04omnltaol5r08njns2pv6vir5bqjs44.apps.googleusercontent.com</string>
     <string name="already_have_an_account">Already have an account?</string>
     <string name="register">Register</string>
     <string name="repeat_password_hint">Repeat your password...</string>
@@ -165,4 +164,17 @@
     <string name="price_range">Price range:</string>
     <string name="apply_filters">Apply filters</string>
     <string name="special_wishes_">Special wishes:</string>
+    <string name="title">Title</string>
+    <string name="choose_the_location">Choose the location:</string>
+    <string name="please_select_location">Please select the location</string>
+    <string name="please_choose_a_location_error">Please choose a location</string>
+    <string name="please_enter_the_title">Please enter the title</string>
+    <string name="please_specify_the_floor">Please specify the floor</string>
+    <string name="please_enter_the_amount_of_rooms">Please enter the amount of rooms</string>
+    <string name="please_enter_the_price">Please enter the price</string>
+    <string name="please_provide_description">Please provide description</string>
+    <string name="please_specify_the_acreage">Please specify the acreage</string>
+    <string name="at_least_one_image_is_required">At least one image is required</string>
+    <string name="network_error_message">Network error. Please check your internet connection and try again.</string>
+    <string name="hello_user">Hello, %1$s</string>
 </resources>

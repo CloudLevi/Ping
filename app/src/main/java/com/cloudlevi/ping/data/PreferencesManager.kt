@@ -6,6 +6,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.LiveData
 import com.cloudlevi.ping.HOMEFRAGMENT_LISTVIEW
 import com.cloudlevi.ping.toCurrencySymbol
+import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -20,6 +21,15 @@ private val Context.preferencesDatastore by preferencesDataStore(("user_preferen
 class PreferencesManager @Inject constructor(@ApplicationContext context: Context) {
 
     private val dataStore = context.preferencesDatastore
+
+    suspend fun clearDatastore(){
+        setUserID("")
+        setUserEmail("")
+        setUserDisplayName("")
+        setCurrency("USD")
+        setListType(HOMEFRAGMENT_LISTVIEW)
+        setLoggedThroughGoogle(false)
+    }
 
     suspend fun setUserID(userID: String) {
         dataStore.edit { preferences -> preferences[PreferencesKeys.USER_ID] = userID }

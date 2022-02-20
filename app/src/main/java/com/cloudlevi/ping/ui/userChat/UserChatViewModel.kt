@@ -12,6 +12,7 @@ import com.cloudlevi.ping.data.*
 import com.cloudlevi.ping.ext.SimpleEventListener
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -28,7 +29,8 @@ class UserChatViewModel @Inject constructor(
     private val chatsIndexRef = FirebaseDatabase.getInstance().getReference("chatIndex")
     private val usersRef = FirebaseDatabase.getInstance().getReference("users")
 
-    private val storageRef = FirebaseStorage.getInstance().getReference("ChatImages")
+    private val storageInstance = FirebaseStorage.getInstance()
+    private val chatStorageRef = storageInstance.getReference("ChatImages")
 
     var receiverID: String = ""
 
@@ -159,7 +161,7 @@ class UserChatViewModel @Inject constructor(
             allChatsRef
                 .child(newChatKey)
                 .setValue(Chat(newChatKey, messages))
-                .addOnSuccessListener {
+                .addOnSuccessListener { t: Void? ->
                     chatID = newChatKey
                     observeChatChanges(chatID)
 
@@ -182,14 +184,12 @@ class UserChatViewModel @Inject constructor(
     fun imageAttachmentReceived(uri: Uri, byteArrayCompressed: ByteArray) {
         attachmentsList.add(MediaAttachment(uri, byteArrayCompressed))
         attachmentsAdapter.update()
-        //attachmentsAdapter.itemAdded()
         changeAttachmentVisibility(true)
     }
 
     fun removeImageAt(pos: Int) {
         attachmentsList.removeAt(pos)
         attachmentsAdapter.update()
-        //attachmentsAdapter.itemRemovedAt(pos)
         if (attachmentsList.isEmpty()) {
             changeAttachmentVisibility(false)
         }
@@ -205,7 +205,7 @@ class UserChatViewModel @Inject constructor(
         }
 
         attachmentsList.forEachIndexed { index, mediaAttachment ->
-            storageRef
+            chatStorageRef
                 .child(messageKey)
                 .child(index.toString())
                 .putBytes(mediaAttachment.byteArray!!)
@@ -234,7 +234,7 @@ class UserChatViewModel @Inject constructor(
 
     private val userEventListener = object : SimpleEventListener() {
         override fun onDataChange(snapshot: DataSnapshot) {
-            receiverModel.value = snapshot.getValue(User::class.java)
+            receiverModel.value = User.createFromSnapshot(snapshot, storageInstance.reference)
         }
     }
 
@@ -243,25 +243,30 @@ class UserChatViewModel @Inject constructor(
         allChatsRef.child(chatID).addValueEventListener(chatEventListener)
     }
 
+    fun getReceiverImageURL(): StorageReference? {
+        val imgRef = receiverModel.value?.imageRefString?: return null
+        return storageInstance.getReferenceFromUrl(imgRef)
+    }
+
     private fun indexOfMessage(messageID: String) =
         messages.indexOfFirst { it.messageID == messageID }
 
-    private fun getMediaForMessage(
-        message: Message,
-        position: Int
-    ) {
-        val mediaCount = message.mediaCount ?: 0
-
-        (0 until mediaCount).forEach { index ->
-            storageRef.child(message.messageID ?: "")
-                .child(index.toString())
-                .downloadUrl.addOnSuccessListener { uri ->
-                    messages[position].imagesList[index] = uri
-                    userChatAdapter?.updateImageForMessageAtPos(position, index, uri)
-                    notifyItemChanged(position)
-                }
-        }
-    }
+//    private fun getMediaForMessage(
+//        message: Message,
+//        position: Int
+//    ) {
+//        val mediaCount = message.mediaCount ?: 0
+//
+//        (0 until mediaCount).forEach { index ->
+//            chatStorageRef.child(message.messageID ?: "")
+//                .child(index.toString())
+//                .downloadUrl.addOnSuccessListener { uri ->
+//                    messages[position].imagesList[index] = uri
+//                    userChatAdapter?.updateImageForMessageAtPos(position, index, uri)
+//                    notifyItemChanged(position)
+//                }
+//        }
+//    }
 
     private val chatEventListener = object : SimpleEventListener() {
         override fun onDataChange(snapshot: DataSnapshot) {
@@ -306,12 +311,15 @@ class UserChatViewModel @Inject constructor(
     private fun updateMessages() {
         messages.forEachIndexed { index, msg ->
             if (msg.hasMedia() && msg.imagesList.isEmpty()) {
-                val list = (0 until (msg.mediaCount ?: 0)).map { Uri.EMPTY }
+
+                val list = (0 until (msg.mediaCount ?: 0)).map { pos ->
+                    chatStorageRef.child(msg.messageID.toString()).child(pos.toString())
+                }
 
                 msg.imagesList = list.toMutableList()
                 userChatAdapter?.updateImagesForPos(index, list.toMutableList())
 
-                getMediaForMessage(msg, index)
+                //getMediaForMessage(msg, index)
             }
         }
 
@@ -320,7 +328,7 @@ class UserChatViewModel @Inject constructor(
         }
     }
 
-    private fun openImageAt(messagePos: Int, startPos: Int, imagesList: List<Uri>) =
+    private fun openImageAt(messagePos: Int, startPos: Int, imagesList: List<StorageReference>) =
         viewModelScope.launch {
             userChatEventChannel.send(UserChatEvent.OpenImageAt(messagePos, startPos, imagesList))
         }
@@ -339,7 +347,7 @@ class UserChatViewModel @Inject constructor(
     sealed class UserChatEvent {
         data class AttachmentVisibility(val isVisible: Boolean) : UserChatEvent()
         data class ToggleLoading(val isLoading: Boolean) : UserChatEvent()
-        data class OpenImageAt(val messagePos: Int, val startPos: Int, val imagesList: List<Uri>) :
+        data class OpenImageAt(val messagePos: Int, val startPos: Int, val imagesList: List<StorageReference>) :
             UserChatEvent()
 
         data class NotifyImageChanged(val adapterPos: Int) : UserChatEvent()
@@ -349,13 +357,13 @@ class UserChatViewModel @Inject constructor(
         object ChooseSingleImage : UserChatEvent()
     }
 
-    override fun getCurrentListByID(id: String?): MutableList<Uri> {
+    override fun getCurrentListByID(id: String?): MutableList<StorageReference> {
         val message = messages.find { it.messageID == id }
         val list = message?.imagesList ?: mutableListOf()
         return list
     }
 
-    override fun getCurrentListByPos(pos: Int): MutableList<Uri> {
+    override fun getCurrentListByPos(pos: Int): MutableList<StorageReference> {
         val list = messages[pos].imagesList
         return list
     }

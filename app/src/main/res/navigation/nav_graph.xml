@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
+
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.cloudlevi.ping.ui.login.LoginFragment"
@@ -15,7 +16,9 @@
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:popExitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/registerFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_loginFragment_to_homeFragment"
             app:destination="@id/homeFragment"
@@ -23,9 +26,9 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/loginFragment"
-            app:popUpToInclusive="true" />
+            app:popUpTo="@id/nav_graph" />
     </fragment>
+
     <fragment
         android:id="@+id/registerFragment"
         android:name="com.cloudlevi.ping.ui.registration.RegisterFragment"
@@ -38,8 +41,18 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/registerFragment" />
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_registerFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/nav_graph" />
     </fragment>
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.cloudlevi.ping.ui.home.HomeFragment"
@@ -68,8 +81,7 @@
         <action
             android:id="@+id/action_myProfileFragment_to_loginFragment"
             app:destination="@id/loginFragment"
-            app:popUpTo="@id/myProfileFragment"
-            app:popUpToInclusive="false" />
+            app:popUpTo="@id/nav_graph" />
         <action
             android:id="@+id/action_myProfileFragment_to_addPostFragment"
             app:destination="@id/addPostFragment"
@@ -98,21 +110,25 @@
     <fragment
         android:id="@+id/addPostFragment"
         android:name="com.cloudlevi.ping.ui.addPost.AddPostFragment"
-        android:label="AddPostFragment" />
+        android:label="AddPostFragment">
+        <action
+            android:id="@+id/addPost_to_apartment_page"
+            app:destination="@id/apartmentPageFragment" />
+    </fragment>
     <fragment
         android:id="@+id/apartmentPageFragment"
         android:name="com.cloudlevi.ping.ui.apartmentPage.ApartmentPageFragment"
         android:label="ApartmentPageFragment">
-<!--        <argument-->
-<!--            android:name="apartmentID"-->
-<!--            app:argType="string" />-->
+        <!--        <argument-->
+        <!--            android:name="apartmentID"-->
+        <!--            app:argType="string" />-->
         <action
             android:id="@+id/action_apartmentPageFragment_to_userPostsFragment"
             app:destination="@id/userPostsFragment" />
         <argument
             android:name="fromUserLists"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_apartmentPageFragment_to_bookingFragment"
             app:destination="@id/bookingFragment" />
@@ -162,20 +178,20 @@
         android:id="@+id/changeDisplayNameFragment"
         android:name="com.cloudlevi.ping.ui.myprofile.ChangeDisplayNameFragment"
         android:label="ChangeDisplayNameFragment"
-        tools:layout="@layout/fragment_change_displayname" >
+        tools:layout="@layout/fragment_change_displayname">
         <action
             android:id="@+id/action_changeDisplayNameFragment_to_myProfileFragment"
             app:destination="@id/myProfileFragment"
-            app:popUpTo="@id/myProfileFragment"
             app:enterAnim="@anim/slide_in_left"
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/slide_in_right"
-            app:popExitAnim="@anim/slide_out_left"/>
+            app:popExitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/myProfileFragment" />
     </fragment>
     <fragment
         android:id="@+id/userChatFragment"
         android:name="com.cloudlevi.ping.ui.userChat.UserChatFragment"
-        android:label="UserChatFragment" >
+        android:label="UserChatFragment">
 
         <argument
             android:name="userModel"
@@ -190,7 +206,7 @@
     <fragment
         android:id="@+id/chatsFragment"
         android:name="com.cloudlevi.ping.ui.chats.ChatsFragment"
-        android:label="ChatsFragment" >
+        android:label="ChatsFragment">
         <action
             android:id="@+id/action_chatsFragment_to_userChatFragment"
             app:destination="@id/userChatFragment" />
@@ -198,7 +214,7 @@
     <fragment
         android:id="@+id/bookingFragment"
         android:name="com.cloudlevi.ping.ui.bookingFragment.BookingFragment"
-        android:label="BookingFragment" >
+        android:label="BookingFragment">
         <argument
             android:name="apartmentHomePost"
             app:argType="com.cloudlevi.ping.data.ApartmentHomePost" />
@@ -214,9 +230,10 @@
     <fragment
         android:id="@+id/yourBookingsFragment"
         android:name="com.cloudlevi.ping.ui.yourBookings.YourBookingsFragment"
-        android:label="YourBookingsFragment" >
+        android:label="YourBookingsFragment">
         <argument
             android:name="rentalMode"
             app:argType="com.cloudlevi.ping.data.RentalMode" />
     </fragment>
+
 </navigation>

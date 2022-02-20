@@ -52,10 +52,13 @@ class ApartmentPageViewModel @Inject constructor(
             apartmentModelLiveData.value = value
             getLandLordInfo(value)
         }
-    var currentLandLordLiveData = MutableLiveData<User>()
 
+    var currentLandLordModel: User? = null
+    //var currentLandLordLiveData = MutableLiveData<User>()
+
+    var newImageUrlList = mapOf<Int, StorageReference>()
     var imageUrlList = HashMap<Int, Uri>()
-    val imageUrlListLiveData = MutableLiveData<HashMap<Int, Uri>>()
+    //val imageUrlListLiveData = MutableLiveData<HashMap<Int, Uri>>()
 
     val apartmentModelLiveData = MutableLiveData<ApartmentHomePost>()
 
@@ -67,7 +70,7 @@ class ApartmentPageViewModel @Inject constructor(
         viewModelScope.launch {
             databaseUserRef.child(currentUserID).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    currentUserModel = snapshot.getValue(User::class.java) ?: User()
+                    currentUserModel = User.createFromSnapshot(snapshot, storageInstance.reference) ?: User()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -89,31 +92,23 @@ class ApartmentPageViewModel @Inject constructor(
         this.apartmentID = apHomePost.apartmentPostID
         checkIfRatingClickable()
 
-        storageRef = storageInstance.reference
+        storageRef = if (currentApartmentModel.firstImageReference.isNullOrEmpty())
+            storageInstance.reference
+                .child("ApartmentUploads")
+                .child(currentApartmentModel.apartmentPostID)
+        else storageInstance.reference
             .child("ApartmentUploads")
             .child(currentApartmentModel.timeStamp.toString())
 
-        val userProfileImageRef = storageInstance.reference
-            .child("ProfileImages")
-            .child(currentApartmentModel.landLordID)
-
         toggleBooking(currentUserID != currentApartmentModel.landLordID)
-
-
-        userProfileImageRef.downloadUrl.addOnSuccessListener {
-            currentLandLordLiveData.value =
-                currentLandLordLiveData.value?.copy(imageUrl = it.toString())
-        }
 
         checkBookings()
 
         getImageLinks(currentApartmentModel)
     }
 
-    fun getUserModel(): User {
-        return if (currentLandLordLiveData.value == null)
-            User()
-        else currentLandLordLiveData.value as User
+    fun getLandLordModel(): User {
+        return currentLandLordModel ?: User()
     }
 
     private fun checkBookings() {
@@ -132,12 +127,17 @@ class ApartmentPageViewModel @Inject constructor(
                     val currentApartmentBooking =
                         bookingList.find {
                             it.tenantID == currentUserID &&
-                            it.apartmentID == currentApartmentModel.apartmentPostID
+                                    it.apartmentID == currentApartmentModel.apartmentPostID
                         }
 
                     Log.d(TAG, "onDataChange: currentApartmentBooking: $currentApartmentBooking")
 
-                    action.set(Action(ActionType.RATING_VISIBILITY, bool = currentApartmentBooking != null))
+                    action.set(
+                        Action(
+                            ActionType.RATING_VISIBILITY,
+                            bool = currentApartmentBooking != null
+                        )
+                    )
                 }
             })
     }
@@ -146,8 +146,14 @@ class ApartmentPageViewModel @Inject constructor(
         databaseUserRef.child(apartmentModel.landLordID)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(landLordInfo: DataSnapshot) {
-                    val landLordModel = landLordInfo.getValue(User::class.java)!!
-                    currentLandLordLiveData.value = landLordModel
+                    val landLordModel = User.createFromSnapshot(landLordInfo, storageInstance.reference)!!
+                    landLordModel.imageRefString =
+                        storageInstance.reference
+                            .child("ProfileImages")
+                            .child(landLordModel.userID!!)
+                            .toString()
+                    currentLandLordModel = landLordModel
+                    action.set(Action(ActionType.LANDLORD_INFO_RECEIVED))
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -155,6 +161,11 @@ class ApartmentPageViewModel @Inject constructor(
                 }
 
             })
+    }
+
+    fun getCurrentLandLordImageRef(): StorageReference? {
+        val imgRef = currentLandLordModel?.imageRefString ?: return null
+        return storageInstance.getReferenceFromUrl(imgRef)
     }
 
     fun isRatingVisible() = currentUserID != currentApartmentModel.landLordID
@@ -176,22 +187,30 @@ class ApartmentPageViewModel @Inject constructor(
     private fun getImageLinks(apartmentModel: ApartmentHomePost) {
         var count = 0
 
-        for (currentChildID in 0..apartmentModel.imageCount) {
+        newImageUrlList = (0..apartmentModel.imageCount).map { imgID ->
+            imgID to storageRef.child(imgID.toString())
+        }.toMap()
+        //imageUrlListLiveData.value = imageUrlList
+        currentApartmentModel.imagesList = newImageUrlList.values.map { it.toString() }
+        action.set(Action(ActionType.IMAGES_COMPILED))
+        changeProgressStatus(View.GONE, true)
 
-            storageRef.child(currentChildID.toString()).downloadUrl.addOnSuccessListener { downloadURL ->
-                imageUrlList[currentChildID] = downloadURL
-                count += 1
-                if (count > apartmentModel.imageCount) {
-                    imageUrlListLiveData.value = imageUrlList
-                    currentApartmentModel.imagesList = imageUrlList.values.toMutableList()
-                    changeProgressStatus(View.GONE, true)
-                }
-
-            }.addOnFailureListener {
-                sendToastMessage(it.message.toString())
-                changeProgressStatus(View.GONE, true)
-            }
-        }
+//        for (currentChildID in 0..apartmentModel.imageCount) {
+//
+//            storageRef.child(currentChildID.toString()).downloadUrl.addOnSuccessListener { downloadURL ->
+//                imageUrlList[currentChildID] = downloadURL
+//                count += 1
+//                if (count > apartmentModel.imageCount) {
+//                    imageUrlListLiveData.value = imageUrlList
+//                    currentApartmentModel.imagesList = imageUrlList.values.toMutableList()
+//                    changeProgressStatus(View.GONE, true)
+//                }
+//
+//            }.addOnFailureListener {
+//                sendToastMessage(it.message.toString())
+//                changeProgressStatus(View.GONE, true)
+//            }
+//        }
     }
 
     fun getCurrentUserRating() =
@@ -243,10 +262,10 @@ class ApartmentPageViewModel @Inject constructor(
     }
 
     fun ratingChanged(rating: Float, comment: String) {
+        //todo return profile image
         val ratingModel = RatingModel(
             currentUserID,
             currentUserModel.displayName,
-            currentUserModel.imageUrl,
             currentApartmentModel.apartmentPostID,
             rating.toDouble(),
             comment,
@@ -279,18 +298,19 @@ class ApartmentPageViewModel @Inject constructor(
     }
 
     private fun parseRatingImages() {
+        //todo return profile image
         currentApartmentModel.ratingsList.forEachIndexed { index, rModel ->
             rModel.userID ?: return
             databaseUserRef.child(rModel.userID).addListenerForSingleValueEvent(
                 object : SimpleEventListener() {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         super.onDataChange(snapshot)
-                        val user = snapshot.getValue(User::class.java)
+                        val user = User.createFromSnapshot(snapshot, storageInstance.reference)
                         Log.d(TAG, "onDataChange: $user")
                         action.set(
                             Action(
                                 ActionType.UPDATE_RATING_IMAGE,
-                                string = user?.imageUrl,
+                                string = "",
                                 pos = index
                             )
                         )
@@ -306,7 +326,9 @@ class ApartmentPageViewModel @Inject constructor(
         TOGGLE_REVIEWS_VISIBILITY,
         CURRENT_REVIEW_CLICK,
         OTHER_REVIEW_CLICK,
-        RATING_VISIBILITY
+        RATING_VISIBILITY,
+        IMAGES_COMPILED,
+        LANDLORD_INFO_RECEIVED
     }
 
     data class Action(

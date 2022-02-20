@@ -13,9 +13,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
 import com.cloudlevi.ping.ui.apartmentPage.ApartmentPageEvent.*
 import com.cloudlevi.ping.*
+import com.cloudlevi.ping.R
 import com.cloudlevi.ping.data.ApartmentHomePost
 import com.cloudlevi.ping.databinding.FragmentApartmentPageBinding
 import com.cloudlevi.ping.ext.*
@@ -27,15 +27,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.cloudlevi.ping.ui.apartmentPage.ApartmentPageViewModel.*
 import com.cloudlevi.ping.ui.apartmentPage.ApartmentPageViewModel.ActionType.*
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.LatLng
+import com.cloudlevi.ping.data.User
+import com.cloudlevi.ping.di.GlideApp
+import com.google.android.gms.maps.GoogleMap
+
 
 @AndroidEntryPoint
 class ApartmentPageFragment :
     BaseFragment<FragmentApartmentPageBinding>
-        (R.layout.fragment_apartment_page, true) {
+        (R.layout.fragment_apartment_page, true), OnMapReadyCallback {
 
     private lateinit var binding: FragmentApartmentPageBinding
     private val viewModel: ApartmentPageViewModel by viewModels()
     private lateinit var viewPagerAdapter: ApartmentPageSliderAdapter
+
+    private var googleMap: GoogleMap? = null
 
     override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentApartmentPageBinding =
         FragmentApartmentPageBinding::inflate
@@ -48,6 +56,9 @@ class ApartmentPageFragment :
         super.onCreateView(inflater, container, savedInstanceState)
 
         binding = FragmentApartmentPageBinding.inflate(inflater, container, false)
+
+        binding.mapView.onCreate(savedInstanceState)
+        binding.mapView.getMapAsync(this)
 
         viewModel.action.observe(viewLifecycleOwner) {
             val data = it.getDataSafely() ?: return@observe
@@ -77,29 +88,8 @@ class ApartmentPageFragment :
 
             reviewRecycler.adapter = viewModel.reviewAdapter
 
-            viewModel.imageUrlListLiveData.observe(viewLifecycleOwner) { imageList ->
-
-                viewPagerAdapter.submitList(imageList)
-
-                TabLayoutMediator(tabLayout, imageSlider) { tab, position ->
-                    tab.icon = ContextCompat.getDrawable(requireContext(), R.drawable.circle_slider)
-                }.attach()
-            }
-
             viewModel.apartmentModelLiveData.observe(viewLifecycleOwner) { apartmentModel ->
                 applyAllText(apartmentModel)
-            }
-
-            viewModel.currentLandLordLiveData.observe(viewLifecycleOwner) { currentLandLord ->
-                val userNameText = "@${currentLandLord?.username}"
-                binding.landLordName.text = currentLandLord?.displayName
-                binding.landLordUserName.text = userNameText
-
-                Glide.with(requireContext())
-                    .load(currentLandLord?.imageUrl)
-                    .centerCrop()
-                    .placeholder(R.drawable.ic_profile_picture)
-                    .into(profileImage)
             }
 
             viewLifecycleOwner.lifecycleScope.launchWhenCreated {
@@ -118,16 +108,18 @@ class ApartmentPageFragment :
                 }
             }
 
+            locationTV.setOnClickListener { showCurrentLocation() }
             bookNowBtn.setOnClickListener { navigateToBooking() }
-
             rateBtn.setOnClickListener { showRatingDialog() }
 
             profileImage.setOnClickListener {
                 val action = ApartmentPageFragmentDirections
-                    .actionApartmentPageFragmentToUserPostsFragment(viewModel.getUserModel(), null)
+                    .actionApartmentPageFragmentToUserPostsFragment(
+                        viewModel.getLandLordModel(),
+                        null
+                    )
                 findNavController().navigate(action)
             }
-
         }
     }
 
@@ -139,7 +131,7 @@ class ApartmentPageFragment :
 
     private fun navigateToBooking() {
         val action = ApartmentPageFragmentDirections.actionApartmentPageFragmentToBookingFragment(
-            viewModel.currentApartmentModel, viewModel.currentLandLordLiveData.value!!
+            viewModel.currentApartmentModel, viewModel.currentLandLordModel!!
         )
         findNavController().navigate(action)
     }
@@ -172,7 +164,7 @@ class ApartmentPageFragment :
 
     private fun applyAllText(apartmentModel: ApartmentHomePost) {
         binding.apply {
-            val priceString = apartmentModel.getPricingText()
+            val priceString = apartmentModel.mGetPricingText()
             val paymentTypeString =
                 getString(R.string.payment_type_) + when (apartmentModel.priceType) {
                     PRICE_TYPE_PER_DAY -> getString(R.string.daily)
@@ -189,7 +181,7 @@ class ApartmentPageFragment :
                 if (apartmentModel.aptType == APT_TYPE_HOUSE) getString(R.string.apt_type_house)
                 else getString(R.string.apt_type_flat)
             val acreageString = getString(R.string.acreage_, apartmentModel.acreage.toString())
-            val locationString = "${apartmentModel.address}, ${apartmentModel.city}"
+            val locationString = apartmentModel.createLatLng().getAddress(requireContext())
             timeTextView.text = convertTime(apartmentModel.timeStamp)
             titleTextView.text = apartmentModel.title
             priceTextView.text = priceString
@@ -215,8 +207,47 @@ class ApartmentPageFragment :
             OTHER_REVIEW_CLICK -> navigateToUser(a.string ?: "")
             RATING_VISIBILITY -> {
                 Log.d("DEBUG", "received rating visibility: ${a.bool}")
-                binding.rateBtn.visibleOrGone(a.bool?: false)
+                binding.rateBtn.visibleOrGone(a.bool ?: false)
             }
+            IMAGES_COMPILED -> imagesReceived()
+            LANDLORD_INFO_RECEIVED -> landLordInfoReceived(viewModel.currentLandLordModel)
+        }
+    }
+
+    private fun imagesReceived() {
+        viewPagerAdapter.submitList(viewModel.newImageUrlList)
+
+        binding.apply {
+            TabLayoutMediator(tabLayout, imageSlider) { tab, position ->
+                tab.icon = ContextCompat.getDrawable(requireContext(), R.drawable.circle_slider)
+            }.attach()
+        }
+    }
+
+    private fun landLordInfoReceived(landlordModel: User?) {
+        val userNameText = "@${landlordModel?.username}"
+        binding.landLordName.text = landlordModel?.displayName
+        binding.landLordUserName.text = userNameText
+
+        GlideApp.with(requireContext())
+            .load(viewModel.getCurrentLandLordImageRef())
+            .centerCrop()
+            .placeholder(R.drawable.ic_profile_picture)
+            .error(R.drawable.ic_profile_picture)
+            .into(binding.profileImage)
+    }
+
+    private fun showCurrentLocation() {
+        val latLng = LatLng(
+            viewModel.currentApartmentModel.latitude,
+            viewModel.currentApartmentModel.longitude
+        )
+        googleMap?.apply {
+            val marker = setNewMarkerCustom(latLng)
+            val title =
+                marker?.getAddress(requireContext()) ?: "${latLng.latitude}, ${latLng.longitude}"
+            marker?.title = title
+            marker?.showInfoWindow()
         }
     }
 
@@ -279,5 +310,52 @@ class ApartmentPageFragment :
     private fun convertTime(timeStamp: Long): String {
         val simpleDateFormat = SimpleDateFormat("dd MMM yyyy HH:mm")
         return simpleDateFormat.format(timeStamp)
+    }
+
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        googleMap?.apply {
+            mapType = GoogleMap.MAP_TYPE_NORMAL
+            showCurrentLocation()
+            setOnMarkerClickListener { m ->
+                val t =
+                    m.getAddress(requireContext()) ?: return@setOnMarkerClickListener false
+                m.title = t
+                m.showInfoWindow()
+                true
+            }
+        }
+        googleMap?.uiSettings?.apply {
+            isCompassEnabled = true
+            isZoomControlsEnabled = true
+            isRotateGesturesEnabled = true
+            isScrollGesturesEnabledDuringRotateOrZoom = true
+            setAllGesturesEnabled(true)
+        }
+    }
+
+
+    override fun onResume() {
+        if (this::binding.isInitialized)
+            binding.mapView.onResume()
+        super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (this::binding.isInitialized)
+            binding.mapView.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (this::binding.isInitialized)
+            binding.mapView.onDestroy()
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        if (this::binding.isInitialized)
+            binding.mapView.onLowMemory()
     }
 }

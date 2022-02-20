@@ -10,13 +10,13 @@ import androidx.room.PrimaryKey
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.ext.applyCurrencySymbol
 import com.cloudlevi.ping.ext.roundTo
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.Exclude
-import com.google.gson.Gson
+import com.google.firebase.storage.StorageReference
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.text.DecimalFormat
-import kotlin.math.round
 
 @Parcelize
 @Entity(tableName = "apartments_homepage_table")
@@ -30,25 +30,32 @@ data class ApartmentHomePost constructor(
     var roomAmount: Int = 0,
     var isFurnished: Boolean = false,
     var acreage: Double = 0.0,
-    var country: String = "",
-    var city: String = "",
-    var address: String = "",
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0,
+    var countryCode: String = "",
     var description: String = "",
     var price: Int = 0,
     var priceType: Int? = PRICE_TYPE_PER_DAY,
-    var firstImageReference: String = "",
+    @Ignore
+    @Exclude @set:Exclude @get:Exclude
+    var firstImageReference: String? = "",
+    @Ignore
+    @Exclude @set:Exclude @get:Exclude
     var imagesReference: String = "",
     var imageCount: Int = 0,
     var timeStamp: Long = 0,
     @Ignore
     @Exclude @set:Exclude @get:Exclude
-    var imagesList: MutableList<Uri> = mutableListOf(),
+    var imagesList: List<String> = mutableListOf(),
     @Ignore
     @Exclude @set:Exclude @get:Exclude
     var priceLocalized: Double = -1.0,
     @Ignore
     @Exclude @set:Exclude @get:Exclude
-    var currency: String = "$"
+    var currency: String = "$",
+    @Ignore
+    @Exclude @set:Exclude @get:Exclude
+    var locationString: String = ""
 ) : Parcelable {
 
     companion object {
@@ -57,11 +64,15 @@ data class ApartmentHomePost constructor(
             currency: String? = null,
             exRate: Double? = null
         ): ApartmentHomePost? {
+            Log.d("TAG", "createFromSnapshot: ${snapshot.getValue(ApartmentHomePost::class.java)}")
             val aptHomePost = snapshot.getValue(ApartmentHomePost::class.java) ?: return null
-            aptHomePost.ratingsList =
-                snapshot.child("ratings").children.mapNotNull { ratingSnapshot ->
+            val ratingsChild = snapshot.child("ratings")
+            aptHomePost.ratingsList = if (ratingsChild.childrenCount > 0) {
+                ratingsChild.children.mapNotNull { ratingSnapshot ->
                     ratingSnapshot.getValue(RatingModel::class.java)
                 }
+            } else listOf()
+
             if (exRate != null && currency != null) {
                 aptHomePost.priceLocalized = (aptHomePost.price * exRate).roundTo(2)
                 aptHomePost.currency = currency
@@ -81,7 +92,9 @@ data class ApartmentHomePost constructor(
 
     fun findReviewForID(userID: String): RatingModel? = ratingsList.find { it.userID == userID }
 
-    fun getCalculationPrice() = if (priceLocalized >= 0.0) priceLocalized else price.toDouble()
+    fun mGetCalculationPrice() = if (priceLocalized >= 0.0) priceLocalized else price.toDouble()
+
+    fun createLatLng() = LatLng(latitude, longitude)
 
     fun priceTypeString(context: Context): String {
         return when (priceType) {
@@ -97,7 +110,7 @@ data class ApartmentHomePost constructor(
         this.currency = mCurrency
     }
 
-    fun getPricingText(): String =
+    fun mGetPricingText(): String =
         if (priceLocalized >= 0.0) DecimalFormat("#.#").format(priceLocalized)
             .applyCurrencySymbol(currency) else "$${price}"
 
@@ -137,5 +150,5 @@ data class ApartmentHomePost constructor(
         roomAmount.toFloat() in acceptedRange
 
     fun matchesPrice(acceptedRange: ClosedFloatingPointRange<Float>) =
-        getCalculationPrice().toFloat() in acceptedRange
+        mGetCalculationPrice().toFloat() in acceptedRange
 }

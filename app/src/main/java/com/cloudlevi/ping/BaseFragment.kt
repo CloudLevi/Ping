@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import com.cloudlevi.ping.ext.toggleAllViewsEnabled
+import com.google.android.gms.maps.MapFragment
 
 abstract class BaseFragment<VB : ViewBinding>(
     @LayoutRes layoutID: Int,
@@ -38,8 +39,12 @@ abstract class BaseFragment<VB : ViewBinding>(
         return binding.root
     }
 
-    fun switchLoading(isLoading: Boolean) {
-        getMainActivity().switchLoading(isLoading)
+    fun switchLoading(isLoading: Boolean, progressText: String = "") {
+        getMainActivity().switchLoading(isLoading, progressText)
+    }
+
+    fun changeLoadingText(progressText: String) {
+        getMainActivity().changeLoadingText(progressText)
     }
 
     fun sendShortToast(message: String) {
@@ -52,11 +57,15 @@ abstract class BaseFragment<VB : ViewBinding>(
         Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
+    fun getGoogleSignInIntent() = getMainActivity().googleSignInClient.signInIntent
+
+    fun googleLogout() = getMainActivity().googleSignInClient.signOut()
+
     fun sendLongToast(@StringRes resID: Int) {
         Toast.makeText(requireContext(), getString(resID), Toast.LENGTH_LONG).show()
     }
 
-    private fun getMainActivity() = requireActivity() as MainActivity
+    fun getMainActivity() = requireActivity() as MainActivity
 
     protected fun getColor(@ColorRes resID: Int) = ContextCompat.getColor(requireContext(), resID)
 }

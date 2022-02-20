@@ -1,5 +1,6 @@
 package com.cloudlevi.ping.ui.home
 
+import android.location.Geocoder
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.SavedStateHandle
@@ -8,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.*
 import com.cloudlevi.ping.ext.ActionLiveData
+import com.cloudlevi.ping.ext.getAddress
+import com.cloudlevi.ping.ext.getMax
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.cloudlevi.ping.ui.home.HomeFragmentEvent.*
@@ -19,17 +22,20 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.*
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
 @HiltViewModel
-class HomeFragmentViewModel @Inject constructor(
+class HomeViewModel @Inject constructor(
     val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
     private val database = Firebase.database.reference.child("apartments")
     var listType: Int = HOMEFRAGMENT_LISTVIEW
+    private var geocoder: Geocoder? = null
 
     val action = ActionLiveData<Action>()
 
@@ -58,6 +64,8 @@ class HomeFragmentViewModel @Inject constructor(
     var sortBy = SortBy.TIME
     var sortOrder = SortOrder.DESCENDING
 
+    var scrollPosY = 0
+
     var searchText = state.get<String>("searchText") ?: ""
         set(value) {
             field = value
@@ -78,6 +86,7 @@ class HomeFragmentViewModel @Inject constructor(
         viewModelScope.launch {
             listType = preferencesManager.getListType()
         }
+        geocoder = Geocoder(PingApplication.instance, Locale.getDefault())
         runBlocking {
             currency = preferencesManager.getCurrency()
             exchangeRate = preferencesManager.getExRate()
@@ -95,7 +104,7 @@ class HomeFragmentViewModel @Inject constructor(
         }
         if (allApartments.isNotEmpty() && !boolSearch)
             getMaxValues(allApartments)
-        action.set(Action(ActionType.LIST_UPDATED, bool = true))
+        notifyListUpdated(true)
     }
 
     fun observeApartmentsList() {
@@ -132,13 +141,15 @@ class HomeFragmentViewModel @Inject constructor(
 
     inner class ApartmentEventListener : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
+            Log.d("HOME", "onDataChange: count: ${snapshot.childrenCount}, ${snapshot.children}")
             allApartments = snapshot.children.mapNotNull { aptSnapshot ->
                 ApartmentHomePost.createFromSnapshot(aptSnapshot, currency, exchangeRate)
             }.toList()
-
+            Log.d("HOME", "onDataChange: after mapNotNull: $allApartments")
             getMaxValues(allApartments)
 
             updateAndFilterCurrentList()
+            Log.d("HOME", "onDataChange: after updateAndFilterCurrentList")
         }
 
         override fun onCancelled(error: DatabaseError) {
@@ -153,7 +164,7 @@ class HomeFragmentViewModel @Inject constructor(
     ) {
         if (clearFilters) {
             displayedApartments = ArrayList(allApartments)
-            action.set(Action(ActionType.LIST_UPDATED))
+            notifyListUpdated()
             return
         }
 
@@ -165,12 +176,12 @@ class HomeFragmentViewModel @Inject constructor(
                 ap.description.contains(searchText, ignoreCase = true)
             ) {
                 addApartment = ap.matchesType(currentApt_type) &&
-                    ap.matchesFurniture(currentFurniture_type) &&
-                    ap.matchesRentType(currentRent_type) &&
-                    ap.matchesAverageRating(currentMinRating..currentMaxRating) &&
-                    ap.matchesFloor(currentMinFloor..currentMaxFloor) &&
-                    ap.matchesRooms(currentMinRooms..currentMaxRooms) &&
-                    ap.matchesPrice(currentMinPrice..currentMaxPrice)
+                        ap.matchesFurniture(currentFurniture_type) &&
+                        ap.matchesRentType(currentRent_type) &&
+                        ap.matchesAverageRating(currentMinRating..currentMaxRating) &&
+                        ap.matchesFloor(currentMinFloor..currentMaxFloor) &&
+                        ap.matchesRooms(currentMinRooms..currentMaxRooms) &&
+                        ap.matchesPrice(currentMinPrice..currentMaxPrice)
             }
             addApartment
         }
@@ -189,17 +200,36 @@ class HomeFragmentViewModel @Inject constructor(
         }
 
         displayedApartments = ArrayList(list)
-        action.set(Action(ActionType.LIST_UPDATED))
+        notifyListUpdated()
+
+        return
+    }
+
+    private fun notifyListUpdated(bool: Boolean? = null) {
+        viewModelScope.launch {
+            displayedApartments = ArrayList(displayedApartments.map { aptPost ->
+                aptPost.copy(
+                    locationString = aptPost.createLatLng()
+                        .getAddress(PingApplication.instance, geocoder)
+                )
+            })
+            action.set(Action(ActionType.LIST_UPDATED, bool = bool))
+        }
     }
 
     private fun getMaxValues(list: List<ApartmentHomePost>) {
-        currentMaxFloor = list.maxOf { it.aptFloor.toFloat() }
-        currentMaxRooms = list.maxOf { it.roomAmount.toFloat() }
-        currentMaxPrice = list.maxOf { ceil(it.getCalculationPrice()).toFloat() }
+        currentMaxFloor = list.getMax(1f) { it.aptFloor.toFloat() }
+        currentMaxRooms = list.getMax(1f) { it.roomAmount.toFloat() }
+        currentMaxPrice = list.getMax(1f) { ceil(it.mGetCalculationPrice()).toFloat() }
 
         totalMaxFloor = currentMaxFloor
         totalMaxRooms = currentMaxRooms
         totalMaxPrice = currentMaxPrice
+
+        Log.d(
+            "HOME",
+            "onDataChange: after getMaxValues: totalMaxFloor: $totalMaxFloor;\n totalMaxRooms: $totalMaxRooms;\ntotalMaxPrice:$totalMaxPrice"
+        )
     }
 
     enum class ActionType {

@@ -164,4 +164,17 @@
     <string name="price_range">Ценовой диапазон:</string>
     <string name="apply_filters">Применить</string>
     <string name="special_wishes_">Пожелания:</string>
+    <string name="title">Название</string>
+    <string name="choose_the_location">Выберите адрес:</string>
+    <string name="please_select_location">Выберите адрес</string>
+    <string name="please_choose_a_location_error">Укажите адрес</string>
+    <string name="please_enter_the_title">Укажите название</string>
+    <string name="please_specify_the_floor">Укажите этаж</string>
+    <string name="please_enter_the_amount_of_rooms">Укажите количество комнат</string>
+    <string name="please_enter_the_price">Укажите цену</string>
+    <string name="please_provide_description">Опишите ваше жильё</string>
+    <string name="please_specify_the_acreage">Укажите площадь</string>
+    <string name="at_least_one_image_is_required">Требуется хотя бы одно изображение</string>
+    <string name="network_error_message">Сетевая ошибка. Пожалуйста, проверьте ваше интернет-соединение и попробуйте еще раз.</string>
+    <string name="hello_user">Привет, %1$s</string>
 </resources>

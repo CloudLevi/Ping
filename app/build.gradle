@@ -7,7 +7,12 @@ plugins {
     id 'androidx.navigation.safeargs'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 }
+
+def apikeyPropertiesFile = rootProject.file("api.properties")
+def apikeyProperties = new Properties()
+apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
 
 android {
     compileSdkVersion 31
@@ -21,6 +26,8 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "G_CLIENT_ID", apikeyProperties['G_CLIENT_ID'])
     }
 
     buildTypes {
@@ -60,6 +67,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage-ktx:19.2.2'
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.firebaseui:firebase-ui-storage:8.0.0'
 
     // Fragment
     implementation "androidx.fragment:fragment-ktx:1.4.0"
@@ -124,8 +132,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
 
     implementation 'com.stripe:stripe-android:18.2.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+
+    implementation 'com.google.android.gms:play-services-maps:18.0.1'
+    implementation 'com.google.maps.android:maps-ktx:3.2.1'
 }
 
 kapt {

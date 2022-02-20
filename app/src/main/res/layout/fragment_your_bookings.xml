@@ -30,8 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-            android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:orientation="vertical">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/bookingsRecycler"
@@ -39,6 +38,7 @@
                 android:layout_height="match_parent"
                 android:overScrollMode="never"
                 android:paddingStart="8dp"
+                android:paddingBottom="16dp"
                 android:paddingEnd="8dp"
                 tools:listitem="@layout/item_your_booking" />
 

@@ -15,6 +15,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -23,16 +24,19 @@ import com.bumptech.glide.request.transition.Transition
 import com.cloudlevi.ping.*
 import com.cloudlevi.ping.data.RentalMode
 import com.cloudlevi.ping.databinding.FragmentMyProfileBinding
+import com.cloudlevi.ping.di.GlideApp
 import com.cloudlevi.ping.ext.LanguageDialogListener
 import com.cloudlevi.ping.ext.getPosForCurrency
 import com.cloudlevi.ping.ext.getPosForLanguage
 import com.cloudlevi.ping.ext.showPickerDialog
+import com.cloudlevi.ping.ui.addPost.AddPostFragmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import com.cloudlevi.ping.ui.myprofile.MyProfileFragmentEvent.*
 import java.io.ByteArrayOutputStream
 import com.cloudlevi.ping.ui.myprofile.MyProfileFragmentViewModel.ActionType.*
 import com.cloudlevi.ping.ui.myprofile.MyProfileFragmentViewModel.Action
+import com.google.firebase.storage.StorageReference
 
 @AndroidEntryPoint
 class MyProfileFragment :
@@ -52,17 +56,13 @@ class MyProfileFragment :
     override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentMyProfileBinding =
         FragmentMyProfileBinding::inflate
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.fragmentCreate()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         super.onCreateView(inflater, container, savedInstanceState)
+        viewModel.fragmentCreate()
 
         binding = FragmentMyProfileBinding.inflate(inflater, container, false)
 
@@ -114,11 +114,15 @@ class MyProfileFragment :
             determineChangePasswordLayoutVisibility()
 
             logoutButton.setOnClickListener {
+                googleLogout()
                 viewModel.onLogoutButtonClicked()
                 (requireActivity() as MainActivity).setUserOnline(false)
+                val addPostVM =
+                    ViewModelProvider(requireActivity() as MainActivity)[AddPostFragmentViewModel::class.java]
+                addPostVM.clearFields()
             }
 
-            greetingsTV.text = "Hello, ${viewModel.displayName}"
+            greetingsTV.text = getString(R.string.hello_user, viewModel.displayName)
 
             addPostButton.setOnClickListener {
                 findNavController().navigate(MyProfileFragmentDirections.actionMyProfileFragmentToAddPostFragment())
@@ -192,32 +196,28 @@ class MyProfileFragment :
             }
         }
 
-        viewModel.imageUriLiveData.observe(viewLifecycleOwner) {
-            loadProfilePic(it)
-        }
-
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.myProfileFragmentEvent.collect { event ->
                 when (event) {
                     is NavigateToLoginScreen -> {
                         navigateToLoginScreen()
                     }
-                    is UpdateUserName -> binding.greetingsTV.text = event.userName
+                    is UpdateUserName -> binding.greetingsTV.text = getString(R.string.hello_user, event.userName)
                     is SendToastMessage -> Toast
                         .makeText(requireContext(), event.message, Toast.LENGTH_LONG)
                         .show()
-                    is ProfileImageUpdated -> loadProfilePic(event.uri)
                 }
 
             }
         }
     }
 
-    private fun doAction(action: Action) {
-        when (action.type) {
-            TOGGLE_LOADING -> switchActivityLoading(action.bool ?: false)
-            CURRENCY_RECEIVED -> currencyReceived(action.string?: "$")
+    private fun doAction(a: Action) {
+        when (a.type) {
+            TOGGLE_LOADING -> switchActivityLoading(a.bool ?: false)
+            CURRENCY_RECEIVED -> currencyReceived(a.string ?: "$")
             CURRENCY_CALL_FAILED -> currencyCallFailed()
+            LOAD_IMAGE -> loadProfilePic(a.storageRef)
         }
     }
 
@@ -252,11 +252,12 @@ class MyProfileFragment :
         viewModel.getExchangeRate(currency)
     }
 
-    private fun loadProfilePic(uri: Uri?) {
-        Glide
-            .with(requireContext())
-            .load(uri)
+    private fun loadProfilePic(storageRef: StorageReference?) {
+        GlideApp.with(requireContext())
+            .load(storageRef)
             .centerCrop()
+            .error(R.drawable.ic_profile_picture)
+            .placeholder(R.drawable.ic_profile_picture)
             .into(binding.profileImage)
     }
 

@@ -8,8 +8,10 @@ import com.cloudlevi.ping.R
 import com.cloudlevi.ping.ext.applyCurrencySymbol
 import com.cloudlevi.ping.ext.roundTo
 import com.cloudlevi.ping.ui.bookingFragment.BookingViewModel
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.Exclude
+import com.google.firebase.storage.StorageReference
 import java.text.DecimalFormat
 
 data class BookingModel(
@@ -18,7 +20,6 @@ data class BookingModel(
     val landlordID: String? = "",
     val landLordDisplayName: String? = "",
     val landLordUserName: String? = "",
-    val landLordImageURL: String? = "",
     val tenantID: String? = "",
     val checkInDate: Long? = 0L,
     val checkInTime: Long? = 0L,
@@ -27,9 +28,19 @@ data class BookingModel(
     val paymentStatus: Int? = 0,
     val paymentType: Int? = 0,
     val rentTotal: Double? = 0.0,
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var rentTotalLocalized: Double = 0.0,
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var rentCurrency: String = ""
 ) {
+
+    @Exclude
+    @get:Exclude
+    val landLordImageURL: String = ""
 
     companion object {
         fun createFromSnapshot(
@@ -47,11 +58,11 @@ data class BookingModel(
         }
     }
 
-    fun getPaymentStatusEnum() = BookingStatus.values().first {
+    fun mGetPaymentStatusEnum() = BookingStatus.values().first {
         it.ordinal == paymentStatus
     }
 
-    fun getPricingText(): String {
+    fun mGetPricingText(): String {
         val rentTotal = "$${rentTotal}"
         val rentLocalizedString = DecimalFormat("#.#")
             .format(rentTotalLocalized)
@@ -99,17 +110,12 @@ data class BookingModel(
     @Exclude
     @set:Exclude
     @get:Exclude
-    var aLocation: String? = ""
+    var aLatLng: LatLng? = null
 
     @Exclude
     @set:Exclude
     @get:Exclude
-    var aCity: String? = ""
-
-    @Exclude
-    @set:Exclude
-    @get:Exclude
-    var aCountry: String? = ""
+    var aCountryCode: String? = ""
 
     @Exclude
     @set:Exclude
@@ -134,9 +140,9 @@ data class BookingModel(
     @Exclude
     @set:Exclude
     @get:Exclude
-    var aImagesList: MutableList<Uri>? = mutableListOf(Uri.EMPTY)
+    var aImagesList: MutableList<StorageReference> = mutableListOf()
 
-    fun getCheckInLong(): Long = (checkInDate ?: 0L) + (checkInTime ?: 0L)
+    fun mGetCheckInLong(): Long = (checkInDate ?: 0L) + (checkInTime ?: 0L)
 
     fun roomCountString(context: Context): String {
         val resID = if (aRoomCount == 1) R.string.one_room
@@ -144,7 +150,7 @@ data class BookingModel(
         return context.getString(resID, aRoomCount.toString())
     }
 
-    fun isPaymentCreditCard() = paymentType == PaymentType.CARD.ordinal
+    fun mIsPaymentCreditCard() = paymentType == PaymentType.CARD.ordinal
 
-    fun isPaymentCash() = paymentType == PaymentType.CASH.ordinal
+    fun mIsPaymentCash() = paymentType == PaymentType.CASH.ordinal
 }

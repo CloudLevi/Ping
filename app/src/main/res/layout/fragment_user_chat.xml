@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -74,7 +75,8 @@
             android:layout_above="@+id/inputBar"
             android:layout_below="@id/topBar"
             android:background="@color/bg_main"
-            android:overScrollMode="never" />
+            android:overScrollMode="never"
+            tools:listitem="@layout/item_user_message" />
 
         <LinearLayout
             android:id="@+id/inputBar"
@@ -113,6 +115,7 @@
                     android:id="@+id/attachBtn"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_margin="4dp"
                     android:background="@drawable/ripple_simple_circle"
                     android:padding="10dp"
                     android:src="@drawable/ic_attach"
@@ -120,12 +123,18 @@
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintEnd_toStartOf="@+id/messageEditText"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/black" />
 
                 <EditText
                     android:id="@+id/messageEditText"
+                    style="@style/TextInputStyle"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/message_edit_text_bg"
                     android:hint="@string/message"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
@@ -135,14 +144,17 @@
                 <ImageView
                     android:id="@+id/sendBtn"
                     android:layout_width="0dp"
-                    android:layout_height="?attr/actionBarSize"
+                    android:layout_height="match_parent"
+                    android:layout_margin="4dp"
                     android:background="@drawable/ripple_simple_circle"
                     android:padding="10dp"
                     android:src="@drawable/ic_baseline_send_24"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintStart_toEndOf="@+id/messageEditText"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/black" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -152,10 +164,10 @@
 
     <FrameLayout
         android:id="@+id/progressLayout"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/black_transparent">
+        android:background="@color/black_transparent"
+        android:visibility="gone">
 
         <ProgressBar
             android:layout_width="48dp"
